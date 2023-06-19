@@ -9,8 +9,7 @@ func Scrape() {
 
 	products, err := GetAllProducts()
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	fmt.Println("==========     Scraping done!     ==========")
@@ -18,8 +17,7 @@ func Scrape() {
 	fmt.Println("==========     Saving to R2 DB...     ==========")
 	dbErr := SaveToGCS([]Product{})
 	if dbErr != nil {
-		fmt.Println(dbErr)
-		return
+		panic(dbErr)
 	}
 	fmt.Println("==========     Saving to R2 DB done!     ==========")
 }
