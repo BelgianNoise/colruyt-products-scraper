@@ -92,8 +92,6 @@ func GetAllProducts() (
 	}
 
 	pages := initResp.ProductsFound/250 + 1
-	// TODO remove
-	pages = 10
 
 	// Limit to 5 concurrent requests, limit set by ScraperAPI Free plan
 	limiter := make(chan int, 5)

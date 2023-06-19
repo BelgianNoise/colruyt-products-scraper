@@ -1,7 +1,7 @@
 package internal
 
 var ScraperAPIUrl = "http://api.scraperapi.com"
-var ScraperAPIKey = ""
+var ScraperAPIKey = "" // Loaded in from .env file
 
 var GCSBucket = "colruyt-products"
 
