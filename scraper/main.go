@@ -7,9 +7,6 @@ import (
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic(err)
-	}
+	godotenv.Load(".env")
 	internal.Scrape()
 }
