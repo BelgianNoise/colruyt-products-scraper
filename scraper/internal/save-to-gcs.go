@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -15,7 +14,7 @@ func SaveToGCS(products []Product) error {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	serialized, err := json.Marshal(products)
