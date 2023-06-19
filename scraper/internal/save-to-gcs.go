@@ -12,14 +12,10 @@ import (
 func SaveToGCS(products []Product) error {
 
 	ctx := context.Background()
-	fmt.Println("11111")
 	client, err := storage.NewClient(ctx)
-	fmt.Println("22222")
 	if err != nil {
-		fmt.Println("33333")
 		return err
 	}
-	fmt.Println("44444")
 
 	serialized, err := json.Marshal(products)
 	if err != nil {
