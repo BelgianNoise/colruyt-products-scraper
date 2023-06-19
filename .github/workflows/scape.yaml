@@ -16,7 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
-      - run: export GOOGLE_APPLICATION_CREDENTIALS=key.json
+      - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"keys.json\"" >> .env'
+      - run: 'echo "" >> .env'
+      - run: 'echo "SCRAPER_API_KEY=\"${{ secrets.SCRAPER_API_KEY }}\"" >> .env'
       - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
