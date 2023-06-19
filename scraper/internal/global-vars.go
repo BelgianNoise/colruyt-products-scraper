@@ -1,9 +1,7 @@
 package internal
 
-import "os"
-
 var ScraperAPIUrl = "http://api.scraperapi.com"
-var ScraperAPIKey = os.Getenv("SCRAPER_API_KEY")
+var ScraperAPIKey = ""
 
 var GCSBucket = "colruyt-products"
 

@@ -57,13 +57,15 @@ func DoAPICall(
 	}
 	defer response.Body.Close()
 
+	fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
+
 	if response.StatusCode == 456 {
-		fmt.Printf("[%d] Status code 456, retrying in 10 sec...\n", page)
+		fmt.Printf("[%d] Retrying in 10 sec...\n", page)
 		time.Sleep(10000 * time.Millisecond)
 		return DoAPICall(page, size)
+	} else if response.StatusCode == 401 {
+		panic("Unauthorized, Check uw key a mattie")
 	}
-
-	fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
 
 	body, bodyErr := io.ReadAll(response.Body)
 	if bodyErr != nil {
@@ -107,7 +109,6 @@ func GetAllProducts() (
 			responseObject, err := DoAPICall(page, 250)
 			if err != nil {
 				fmt.Println(err)
-				return
 			}
 			products = append(products, responseObject.Products...)
 		}(i)
