@@ -16,6 +16,5 @@ jobs:
       - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
       - run: 'echo "" >> .env'
       - run: 'echo "SCRAPER_API_KEY=\"${{ secrets.SCRAPER_API_KEY }}\"" >> .env'
-      - run: go get ./...
       - run: go build ./scraper
       - run: ./scraper
