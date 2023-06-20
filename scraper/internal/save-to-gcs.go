@@ -13,7 +13,7 @@ func SaveProductsToGCS(products []shared.Product) error {
 	if err != nil {
 		return fmt.Errorf("failed to serialize products: %v", err)
 	}
-	key := "colruyt-products/" + time.Now().Format("2006-01-02-15-04-05") + ".json"
+	key := "colruyt-products/" + time.Now().In(time.UTC).Format("2006-01-02-15-04-05") + ".json"
 
 	errWrite := shared.SaveJSONToGCS(shared.GCSBucket, key, serialized)
 	if errWrite != nil {

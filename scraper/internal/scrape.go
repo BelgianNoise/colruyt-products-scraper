@@ -14,10 +14,10 @@ func Scrape() {
 
 	fmt.Println("==========     Scraping done!     ==========")
 	fmt.Printf("Amount of products retrieved: %d\n", len(products))
-	fmt.Println("==========     Saving to R2 DB...     ==========")
+	fmt.Println("==========     Saving to GCS ...     ==========")
 	dbErr := SaveProductsToGCS(products)
 	if dbErr != nil {
 		panic(dbErr)
 	}
-	fmt.Println("==========     Saving to R2 DB done!     ==========")
+	fmt.Println("==========     Saving to GCS done!     ==========")
 }
