@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	shared "shared/pkg"
 	"sync"
 	"time"
 )
@@ -82,13 +83,13 @@ func DoAPICall(
 }
 
 func GetAllProducts() (
-	products []Product,
+	products []shared.Product,
 	err error,
 ) {
 
 	initResp, err := DoAPICall(1, 1)
 	if err != nil {
-		return []Product{}, err
+		return []shared.Product{}, err
 	}
 
 	pages := initResp.ProductsFound/250 + 1

@@ -3,8 +3,6 @@ package internal
 var ScraperAPIUrl = "http://api.scraperapi.com"
 var ScraperAPIKey = "" // Loaded in from .env file
 
-var GCSBucket = "colruyt-products"
-
 var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgproductretrsvc.v2/v2/v2/nl/products"
 var ColruytAPIHost = "apip.colruyt.be"
 var ColruytPlaceID = "605"
