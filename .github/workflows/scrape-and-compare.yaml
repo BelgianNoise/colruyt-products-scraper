@@ -1,4 +1,4 @@
-name: Scrape Colruyt Products + Compare price changes
+name: Scrape Products + Compare prices
 
 on:
   workflow_dispatch:
