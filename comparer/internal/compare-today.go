@@ -38,7 +38,7 @@ func CompareTodayToPrevious() (
 		if err != nil {
 			continue
 		}
-		if fileTime.Before(lastFileTime.Add(-20 * time.Hour)) {
+		if fileTime.Before(lastFileTime.Add(-23 * time.Hour)) {
 			previousFile = file
 			break
 		}
@@ -48,9 +48,9 @@ func CompareTodayToPrevious() (
 		return "", fmt.Errorf("no previous file %q or last file %q", previousFile, lastFile)
 	}
 
-	jsonFileLocation, errCompare := shared.Compare(lastFile, previousFile)
+	jsonFileLocation, errCompare := shared.Compare(lastFile, previousFile, false)
 	if errCompare != nil {
-		return "", errCompare
+		return "", fmt.Errorf("error comparing %q to %q: %v", lastFile, previousFile, errCompare)
 	}
 
 	return jsonFileLocation, nil

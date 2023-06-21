@@ -24,7 +24,10 @@ func ListBucketObjects(
 	defer client.Close()
 
 	buck := client.Bucket(bucket)
-	objs := buck.Objects(ctx, nil)
+	// list all objects in the colruyt-product folder
+	objs := buck.Objects(ctx, &storage.Query{
+		Prefix: "colruyt-products/",
+	})
 
 	for {
 		attrs, err := objs.Next()
