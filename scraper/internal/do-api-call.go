@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var retriesLeft = 10
+
 func DoAPICall(
 	page int,
 	size int,
@@ -61,9 +63,14 @@ func DoAPICall(
 	fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
 
 	if response.StatusCode == 456 {
-		fmt.Printf("[%d] Retrying in 10 sec...\n", page)
-		time.Sleep(10000 * time.Millisecond)
-		return DoAPICall(page, size)
+		if retriesLeft == 0 {
+			return APIResponse{}, fmt.Errorf("API call failed")
+		} else {
+			retriesLeft--
+			fmt.Printf("[%d] Retrying in 5 sec...\n", page)
+			time.Sleep(5000 * time.Millisecond)
+			return DoAPICall(page, size)
+		}
 	} else if response.StatusCode == 401 {
 		panic("Unauthorized, Check uw key a mattie")
 	}
@@ -76,7 +83,14 @@ func DoAPICall(
 	var apiResponse APIResponse
 	unmarshalErr := json.Unmarshal(body, &apiResponse)
 	if unmarshalErr != nil {
-		return APIResponse{}, unmarshalErr
+		if retriesLeft == 0 {
+			return APIResponse{}, unmarshalErr
+		} else {
+			retriesLeft--
+			fmt.Printf("[%d] Issue with parsing JSON, Retrying in 5 sec...\n", page)
+			time.Sleep(5000 * time.Millisecond)
+			return DoAPICall(page, size)
+		}
 	}
 
 	return apiResponse, nil
