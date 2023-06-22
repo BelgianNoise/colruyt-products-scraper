@@ -31,7 +31,6 @@ func DoAPICall(
 	queryParams.Set("size", fmt.Sprint(size))
 	queryParams.Set("placeId", ColruytPlaceID)
 	queryParams.Set("sort", "new desc")
-	// queryParams.Set("categoryIds", "1718 1719")
 	requestUrl.RawQuery = queryParams.Encode()
 
 	scraperRequestUrl, scraperUrlErr := url.ParseRequestURI(ScraperAPIUrl)
@@ -110,9 +109,10 @@ func GetAllProducts() (
 	if err != nil {
 		return []shared.Product{}, err
 	}
+	fmt.Printf("Should retrieve %d products\n", initResp.ProductsFound)
 
 	pages := initResp.ProductsFound/250 + 1
-	repeat := 1
+	repeat := 2
 
 	// Limit to 5 concurrent requests, limit set by ScraperAPI Free plan
 	limiter := make(chan int, 5)
