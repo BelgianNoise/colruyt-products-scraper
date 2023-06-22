@@ -40,6 +40,9 @@ func DoAPICall(
 	scraperQueryParams.Set("api_key", ScraperAPIKey)
 	scraperQueryParams.Set("keep_headers", "true")
 	scraperQueryParams.Set("url", requestUrl.String())
+	// scraperQueryParams.Set("render", "true")
+	scraperQueryParams.Set("session_number", "1")
+	scraperQueryParams.Set("country_code", "eu")
 	scraperRequestUrl.RawQuery = scraperQueryParams.Encode()
 
 	request, requestErr := http.NewRequest("GET", scraperRequestUrl.String(), nil)
@@ -113,9 +116,9 @@ func GetAllProducts() (
 	defer close(limiter)
 	wg := sync.WaitGroup{}
 	wg.Add(pages)
-	// We don't want to save duplicates, for some reason the API returns duplicates
-	alreadyAdded := map[string]bool{}
-	amountDuplicates := 0
+
+	productsMutex := sync.Mutex{}
+	allProducts := []shared.Product{}
 
 	for i := 1; i <= pages; i++ {
 		limiter <- 1
@@ -127,19 +130,30 @@ func GetAllProducts() (
 				fmt.Println(err)
 			}
 
-			for _, product := range responseObject.Products {
-				if !alreadyAdded[product.ProductID] {
-					alreadyAdded[product.ProductID] = true
-					products = append(products, product)
-				} else {
-					amountDuplicates++
-				}
-			}
+			productsMutex.Lock()
+			allProducts = append(allProducts, responseObject.Products...)
+			productsMutex.Unlock()
 
 		}(i)
 	}
 
 	wg.Wait()
+
+	// We don't want to save duplicates, for some reason the API returns duplicates
+	alreadyAdded := map[string]bool{}
+	amountDuplicates := 0
+
+	for _, product := range allProducts {
+		if !alreadyAdded[product.TechnicalArticleNumber] {
+			alreadyAdded[product.TechnicalArticleNumber] = true
+			products = append(products, product)
+		} else {
+			// fmt.Printf("Dupe: %s %s\n", product.ProductID, product.LongName)
+			amountDuplicates++
+		}
+	}
+	fmt.Printf("Amount of unique products: %d\n", len(products))
+	fmt.Printf("Amount of products: %d\n", len(allProducts))
 	fmt.Printf("Amount of duplicates: %d (why tho Colruyt?)\n", amountDuplicates)
 	return products, nil
 
