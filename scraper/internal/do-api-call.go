@@ -111,51 +111,57 @@ func GetAllProducts() (
 	}
 
 	pages := initResp.ProductsFound/250 + 1
+	repeat := 1
 
 	// Limit to 5 concurrent requests, limit set by ScraperAPI Free plan
 	limiter := make(chan int, 5)
 	defer close(limiter)
 	wg := sync.WaitGroup{}
-	wg.Add(pages)
+	wg.Add(pages * repeat)
 
 	productsMutex := sync.Mutex{}
-	allProducts := []shared.Product{}
+	alreadyAdded := map[string]bool{}
 
-	for i := 1; i <= pages; i++ {
-		limiter <- 1
-		go func(page int) {
-			defer wg.Done()
-			defer func() { <-limiter }()
-			responseObject, err := DoAPICall(page, 250)
-			if err != nil {
-				fmt.Println(err)
-			}
+	// For some absolute bonkers reason the API likes to go wild and return
+	// different objects for the same page, so we do the same request `repeat` times.
+	// It seems as if it sometimes just doesn't care about parameters passed along.
+	//
+	// This doesn't mean we will always get all the products, but it
+	// significantly increases the % of products we get.
+	//
+	// Go to the `assortiment` page and order by `new`, refresh a couple of
+	// times and you'll see different results, like it somehow doesn't list some
+	// products. I am proper mad about this tbh.
+	//
+	// I could query by category to ensure that every request would only yield
+	// less then 250 products. But that would lead to way too many requests,
+	// considering I am on the free plan of ScraperAPI.
+	for i := 1; i <= repeat; i++ {
+		for i := 1; i <= pages; i++ {
+			limiter <- 1
+			go func(page int) {
+				defer wg.Done()
+				defer func() { <-limiter }()
+				responseObject, err := DoAPICall(page, 250)
+				if err != nil {
+					fmt.Println(err)
+				}
 
-			productsMutex.Lock()
-			allProducts = append(allProducts, responseObject.Products...)
-			productsMutex.Unlock()
+				for _, product := range responseObject.Products {
+					productsMutex.Lock()
+					if !alreadyAdded[product.ProductID] {
+						alreadyAdded[product.ProductID] = true
+						products = append(products, product)
+					}
+					productsMutex.Unlock()
+				}
 
-		}(i)
+			}(i)
+		}
 	}
 
 	wg.Wait()
 
-	// We don't want to save duplicates, for some reason the API returns duplicates
-	alreadyAdded := map[string]bool{}
-	amountDuplicates := 0
-
-	for _, product := range allProducts {
-		if alreadyAdded[product.ProductID] {
-			// fmt.Printf("Dupe: %s %s\n", product.ProductID, product.LongName)
-			amountDuplicates++
-		} else {
-			alreadyAdded[product.ProductID] = true
-			products = append(products, product)
-		}
-	}
-	fmt.Printf("Amount of unique products: %d\n", len(products))
-	fmt.Printf("Amount of products: %d\n", len(allProducts))
-	fmt.Printf("Amount of duplicates: %d (why tho Colruyt?)\n", amountDuplicates)
 	return products, nil
 
 }
