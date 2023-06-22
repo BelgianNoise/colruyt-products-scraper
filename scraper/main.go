@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	internal "scraper/internal"
+	scraper "scraper/pkg"
 
 	"github.com/joho/godotenv"
 )
@@ -12,6 +12,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	internal.ScraperAPIKey = os.Getenv("SCRAPER_API_KEY")
-	internal.Scrape()
+	scraper.ScraperAPIKey = os.Getenv("SCRAPER_API_KEY")
+	scraper.Scrape()
 }

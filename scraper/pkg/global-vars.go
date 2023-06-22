@@ -1,4 +1,4 @@
-package internal
+package scraper
 
 var ScraperAPIUrl = "http://api.scraperapi.com"
 var ScraperAPIKey = "" // Loaded in from .env file

@@ -1,4 +1,4 @@
-package internal
+package scraper
 
 import (
 	"encoding/json"
@@ -31,6 +31,7 @@ func DoAPICall(
 	queryParams.Set("size", fmt.Sprint(size))
 	queryParams.Set("placeId", ColruytPlaceID)
 	queryParams.Set("sort", "new desc")
+	// queryParams.Set("categoryIds", "1718 1719")
 	requestUrl.RawQuery = queryParams.Encode()
 
 	scraperRequestUrl, scraperUrlErr := url.ParseRequestURI(ScraperAPIUrl)

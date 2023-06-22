@@ -1,4 +1,4 @@
-package internal
+package scraper
 
 import shared "shared/pkg"
 
