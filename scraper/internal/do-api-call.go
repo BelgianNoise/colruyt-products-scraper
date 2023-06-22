@@ -113,6 +113,9 @@ func GetAllProducts() (
 	defer close(limiter)
 	wg := sync.WaitGroup{}
 	wg.Add(pages)
+	// We don't want to save duplicates, for some reason the API returns duplicates
+	alreadyAdded := map[string]bool{}
+	amountDuplicates := 0
 
 	for i := 1; i <= pages; i++ {
 		limiter <- 1
@@ -123,11 +126,21 @@ func GetAllProducts() (
 			if err != nil {
 				fmt.Println(err)
 			}
-			products = append(products, responseObject.Products...)
+
+			for _, product := range responseObject.Products {
+				if !alreadyAdded[product.ProductID] {
+					alreadyAdded[product.ProductID] = true
+					products = append(products, product)
+				} else {
+					amountDuplicates++
+				}
+			}
+
 		}(i)
 	}
 
 	wg.Wait()
+	fmt.Printf("Amount of duplicates: %d (why tho Colruyt?)\n", amountDuplicates)
 	return products, nil
 
 }
