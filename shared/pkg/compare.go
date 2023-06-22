@@ -56,11 +56,11 @@ func Compare(
 	for _, laterProduct := range laterList {
 		for _, earlierProduct := range earlierList {
 			if laterProduct.ProductID == earlierProduct.ProductID {
+				// Don't include promotions
+				if excludePromotions && (laterProduct.Price.IsRedPrice || earlierProduct.Price.IsRedPrice) {
+					continue
+				}
 				if laterProduct.Price.BasicPrice != 0 && earlierProduct.Price.BasicPrice != 0 {
-					// Don't include promotions
-					if excludePromotions && (laterProduct.Price.IsRedPrice || earlierProduct.Price.IsRedPrice) {
-						continue
-					}
 					if laterProduct.Price.BasicPrice != earlierProduct.Price.BasicPrice {
 						change := laterProduct.Price.BasicPrice - earlierProduct.Price.BasicPrice
 						diff = append(diff, PriceDifference{
@@ -79,6 +79,8 @@ func Compare(
 						}
 					}
 				}
+				// product found, no need to keep looping
+				break
 			}
 		}
 	}
