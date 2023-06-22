@@ -30,6 +30,7 @@ func DoAPICall(
 	queryParams.Set("page", fmt.Sprint(page))
 	queryParams.Set("size", fmt.Sprint(size))
 	queryParams.Set("placeId", ColruytPlaceID)
+	queryParams.Set("sort", "new desc")
 	requestUrl.RawQuery = queryParams.Encode()
 
 	scraperRequestUrl, scraperUrlErr := url.ParseRequestURI(ScraperAPIUrl)
@@ -41,7 +42,7 @@ func DoAPICall(
 	scraperQueryParams.Set("keep_headers", "true")
 	scraperQueryParams.Set("url", requestUrl.String())
 	// scraperQueryParams.Set("render", "true")
-	scraperQueryParams.Set("session_number", "1")
+	// scraperQueryParams.Set("session_number", "1")
 	scraperQueryParams.Set("country_code", "eu")
 	scraperRequestUrl.RawQuery = scraperQueryParams.Encode()
 
@@ -144,12 +145,12 @@ func GetAllProducts() (
 	amountDuplicates := 0
 
 	for _, product := range allProducts {
-		if !alreadyAdded[product.TechnicalArticleNumber] {
-			alreadyAdded[product.TechnicalArticleNumber] = true
-			products = append(products, product)
-		} else {
+		if alreadyAdded[product.ProductID] {
 			// fmt.Printf("Dupe: %s %s\n", product.ProductID, product.LongName)
 			amountDuplicates++
+		} else {
+			alreadyAdded[product.ProductID] = true
+			products = append(products, product)
 		}
 	}
 	fmt.Printf("Amount of unique products: %d\n", len(products))
