@@ -8,10 +8,7 @@ import (
 	"net/url"
 	shared "shared/pkg"
 	"sync"
-	"time"
 )
-
-var retriesLeft = 10
 
 func DoAPICall(
 	page int,
@@ -33,69 +30,40 @@ func DoAPICall(
 	queryParams.Set("sort", "new desc")
 	requestUrl.RawQuery = queryParams.Encode()
 
-	scraperRequestUrl, scraperUrlErr := url.ParseRequestURI(ScraperAPIUrl)
-	if scraperUrlErr != nil {
-		return APIResponse{}, scraperUrlErr
-	}
-	scraperQueryParams := requestUrl.Query()
-	scraperQueryParams.Set("api_key", ScraperAPIKey)
-	scraperQueryParams.Set("keep_headers", "true")
-	scraperQueryParams.Set("url", requestUrl.String())
-	// scraperQueryParams.Set("render", "true")
-	// scraperQueryParams.Set("session_number", "1")
-	scraperQueryParams.Set("country_code", "eu")
-	scraperRequestUrl.RawQuery = scraperQueryParams.Encode()
-
-	request, requestErr := http.NewRequest("GET", scraperRequestUrl.String(), nil)
+	request, requestErr := http.NewRequest("GET", requestUrl.String(), nil)
 	if requestErr != nil {
 		return APIResponse{}, requestErr
 	}
 
 	request.Header.Set("Host", ColruytAPIHost)
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("x-cg-apikey", APIKey)
-	request.Header.Set("User-Agent", UserAgent)
 
-	fmt.Printf("[%d] Doing API call\n", page)
+	if page == 1 && size == 1 {
+		fmt.Println("- Doing initial API call")
+	}
 
-	response, responseErr := http.DefaultClient.Do(request)
+	response, responseErr := shared.UseProxy(request)
 	if responseErr != nil {
-		return APIResponse{}, responseErr
+		return DoAPICall(page, size)
 	}
 	defer response.Body.Close()
 
-	fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
-
-	if response.StatusCode == 456 {
-		if retriesLeft == 0 {
-			return APIResponse{}, fmt.Errorf("API call failed")
-		} else {
-			retriesLeft--
-			fmt.Printf("[%d] Retrying in 5 sec...\n", page)
-			time.Sleep(5000 * time.Millisecond)
-			return DoAPICall(page, size)
-		}
-	} else if response.StatusCode == 401 {
-		panic("Unauthorized, Check uw key a mattie")
+	// fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
+	if response.StatusCode != 200 {
+		return DoAPICall(page, size)
 	}
 
 	body, bodyErr := io.ReadAll(response.Body)
 	if bodyErr != nil {
-		return APIResponse{}, bodyErr
+		return DoAPICall(page, size)
 	}
 
 	var apiResponse APIResponse
 	unmarshalErr := json.Unmarshal(body, &apiResponse)
 	if unmarshalErr != nil {
-		if retriesLeft == 0 {
-			return APIResponse{}, unmarshalErr
-		} else {
-			retriesLeft--
-			fmt.Printf("[%d] Issue with parsing JSON, Retrying in 5 sec...\n", page)
-			time.Sleep(5000 * time.Millisecond)
-			return DoAPICall(page, size)
-		}
+		return DoAPICall(page, size)
 	}
+
+	fmt.Printf("[%d] Call successfull\n", page)
 
 	return apiResponse, nil
 }
@@ -105,45 +73,57 @@ func GetAllProducts() (
 	err error,
 ) {
 
+	pageSize := 250
+	limit := 50
+	percentageRequired := 100.0 / 100.0
+
 	initResp, err := DoAPICall(1, 1)
 	if err != nil {
 		return []shared.Product{}, err
 	}
 	fmt.Printf("Should retrieve %d products\n", initResp.ProductsFound)
 
-	pages := initResp.ProductsFound/250 + 1
-	repeat := 2
+	pages := initResp.ProductsFound/pageSize + 1
 
 	// Limit to 5 concurrent requests, limit set by ScraperAPI Free plan
-	limiter := make(chan int, 5)
+	limiter := make(chan int, limit)
 	defer close(limiter)
 	wg := sync.WaitGroup{}
-	wg.Add(pages * repeat)
 
 	productsMutex := sync.Mutex{}
 	alreadyAdded := map[string]bool{}
 
+	productsRequired := int(float64(initResp.ProductsFound) * percentageRequired)
+
 	// For some absolute bonkers reason the API likes to go wild and return
-	// different objects for the same page, so we do the same request `repeat` times.
+	// different objects for the same page.
 	// It seems as if it sometimes just doesn't care about parameters passed along.
-	//
-	// This doesn't mean we will always get all the products, but it
-	// significantly increases the % of products we get.
 	//
 	// Go to the `assortiment` page and order by `new`, refresh a couple of
 	// times and you'll see different results, like it somehow doesn't list some
 	// products. I am proper mad about this tbh.
-	//
-	// I could query by category to ensure that every request would only yield
-	// less then 250 products. But that would lead to way too many requests,
-	// considering I am on the free plan of ScraperAPI.
-	for i := 1; i <= repeat; i++ {
+waitTillWeGotEnoughProducts:
+	for {
 		for i := 1; i <= pages; i++ {
 			limiter <- 1
+			wg.Add(1)
+			fmt.Printf(
+				"--- Acc: %d / %d (%d%s)\n",
+				len(products),
+				productsRequired,
+				int((float32(len(products))/float32(productsRequired))*100),
+				"%",
+			)
+			if len(products) >= int(float64(initResp.ProductsFound)*percentageRequired) {
+				<-limiter
+				wg.Done()
+				fmt.Println("==========      Got enough products, breaking (pending processes will still finish)")
+				break waitTillWeGotEnoughProducts
+			}
 			go func(page int) {
 				defer wg.Done()
 				defer func() { <-limiter }()
-				responseObject, err := DoAPICall(page, 250)
+				responseObject, err := DoAPICall(page, pageSize)
 				if err != nil {
 					fmt.Println(err)
 				}
