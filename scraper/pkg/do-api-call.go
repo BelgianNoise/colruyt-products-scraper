@@ -13,6 +13,7 @@ import (
 func DoAPICall(
 	page int,
 	size int,
+	useProxy bool,
 ) (
 	responseObject APIResponse,
 	err error,
@@ -41,31 +42,54 @@ func DoAPICall(
 		fmt.Println("- Doing initial API call")
 	}
 
-	response, responseErr := shared.UseProxy(request)
+	var response *http.Response
+	var responseErr error
+
+	if useProxy {
+		response, responseErr = shared.UseProxy(request)
+	} else {
+		response, responseErr = http.DefaultClient.Do(request)
+	}
 	if responseErr != nil {
-		return DoAPICall(page, size)
+		return retry(page, size, useProxy)
 	}
 	defer response.Body.Close()
 
 	// fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
 	if response.StatusCode != 200 {
-		return DoAPICall(page, size)
+		return retry(page, size, useProxy)
 	}
 
 	body, bodyErr := io.ReadAll(response.Body)
 	if bodyErr != nil {
-		return DoAPICall(page, size)
+		return retry(page, size, useProxy)
 	}
 
 	var apiResponse APIResponse
 	unmarshalErr := json.Unmarshal(body, &apiResponse)
 	if unmarshalErr != nil {
-		return DoAPICall(page, size)
+		return retry(page, size, useProxy)
 	}
 
 	fmt.Printf("[%d] Call successfull\n", page)
 
 	return apiResponse, nil
+}
+
+var mayQuit = false
+
+func retry(
+	page int,
+	size int,
+	useProxy bool,
+) (
+	responseObject APIResponse,
+	err error,
+) {
+	if mayQuit {
+		return APIResponse{Products: []shared.Product{}}, nil
+	}
+	return DoAPICall(page, size, useProxy)
 }
 
 func GetAllProducts() (
@@ -77,7 +101,7 @@ func GetAllProducts() (
 	limit := 50
 	percentageRequired := 100.0 / 100.0
 
-	initResp, err := DoAPICall(1, 1)
+	initResp, err := DoAPICall(1, 1, false)
 	if err != nil {
 		return []shared.Product{}, err
 	}
@@ -118,12 +142,13 @@ waitTillWeGotEnoughProducts:
 				<-limiter
 				wg.Done()
 				fmt.Println("==========      Got enough products, breaking (pending processes will still finish)")
+				mayQuit = true
 				break waitTillWeGotEnoughProducts
 			}
 			go func(page int) {
 				defer wg.Done()
 				defer func() { <-limiter }()
-				responseObject, err := DoAPICall(page, pageSize)
+				responseObject, err := DoAPICall(page, pageSize, true)
 				if err != nil {
 					fmt.Println(err)
 				}
