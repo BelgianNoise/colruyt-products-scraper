@@ -29,24 +29,13 @@ func Compare(
 		return key, nil
 	}
 
-	later, lErr := GetObjectFromBucket(GCSBucket, laterFile)
-	if lErr != nil {
-		return "", lErr
-	}
-	var laterList []Product
-	errJSONLater := json.Unmarshal(later, &laterList)
+	laterList, err := GetProducts(GCSBucket, laterFile)
 	if err != nil {
-		return "", errJSONLater
+		return "", err
 	}
-
-	earlier, eErr := GetObjectFromBucket(GCSBucket, earlierFile)
-	if eErr != nil {
-		return "", eErr
-	}
-	var earlierList []Product
-	errJSONEarlier := json.Unmarshal(earlier, &earlierList)
+	earlierList, err := GetProducts(GCSBucket, earlierFile)
 	if err != nil {
-		return "", errJSONEarlier
+		return "", err
 	}
 
 	diff := []PriceDifference{}

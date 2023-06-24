@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	shared "shared/pkg"
-	"sort"
 	"strings"
 	"time"
 )
@@ -12,25 +11,25 @@ func CompareTodayToPrevious() (
 	jsonFileLocation string,
 	e error,
 ) {
-	objects, err := shared.ListBucketObjects(shared.GCSBucket)
+	latestKey, err := shared.GetLatestProductsKey(shared.GCSBucket)
 	if err != nil {
 		return "", err
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(objects)))
-
-	lastFile := objects[0]
-
 	today := time.Now().In(time.UTC).Format("2006-01-02")
-	if !strings.HasPrefix(lastFile, shared.GCSBucket+"/"+today) {
-		return "", fmt.Errorf("no file found for today, last file: %q, today: %q", lastFile, today)
+	if !strings.HasPrefix(latestKey, shared.GCSBucket+"/"+today) {
+		return "", fmt.Errorf("no file found for today, last file: %q, today: %q", latestKey, today)
 	}
 
-	lastFileDateString := strings.Split(strings.Split(lastFile, "/")[1], ".")[0]
+	lastFileDateString := strings.Split(strings.Split(latestKey, "/")[1], ".")[0]
 	lastFileTime, err := time.Parse("2006-01-02-15-04-05", lastFileDateString)
 	if err != nil {
 		return "", err
 	}
 
+	objects, err := shared.ListBucketObjects(shared.GCSBucket)
+	if err != nil {
+		return "", err
+	}
 	var previousFile string
 	for _, file := range objects {
 		dateString := strings.Split(strings.Split(file, "/")[1], ".")[0]
@@ -44,13 +43,13 @@ func CompareTodayToPrevious() (
 		}
 	}
 
-	if previousFile == "" || lastFile == "" {
-		return "", fmt.Errorf("no previous file %q or last file %q", previousFile, lastFile)
+	if previousFile == "" || latestKey == "" {
+		return "", fmt.Errorf("no previous file %q or last file %q", previousFile, latestKey)
 	}
 
-	jsonFileLocation, errCompare := shared.Compare(lastFile, previousFile, false)
+	jsonFileLocation, errCompare := shared.Compare(latestKey, previousFile, false)
 	if errCompare != nil {
-		return "", fmt.Errorf("error comparing %q to %q: %v", lastFile, previousFile, errCompare)
+		return "", fmt.Errorf("error comparing %q to %q: %v", latestKey, previousFile, errCompare)
 	}
 
 	return jsonFileLocation, nil

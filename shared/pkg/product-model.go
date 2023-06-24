@@ -36,3 +36,35 @@ type Product struct {
 	TopCategoryName               string `json:"topCategoryName"`
 	WalkRouteSequenceNumber       int    `json:"walkRouteSequenceNumber"`
 }
+
+var ProductColumns = []string{
+	"id",
+	"name",
+	"long_name",
+	"short_name",
+	"content",
+	"full_image",
+	"square_image",
+	"thumbnail",
+	"commercial_article_number",
+	"technical_article_number",
+	"alcohol_volume",
+	"country_of_origin",
+	"fic_code",
+	"is_biffe",
+	"is_bio",
+	"is_exclusively_sold_in_luxembourg",
+	"is_new",
+	"is_private_label",
+	"is_weight_article",
+	"order_unit",
+	"recent_quantity_of_stock_units",
+	"weightconversion_factor",
+	"brand",
+	"business_domain",
+	"is_available",
+	"seo_brand",
+	"top_category_id",
+	"top_category_name",
+	"walk_route_sequence_number",
+}

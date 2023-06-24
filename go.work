@@ -4,5 +4,6 @@ use (
 	./comparer
 	./scraper
 	./shared
+	./inserter
 	./test
 )
