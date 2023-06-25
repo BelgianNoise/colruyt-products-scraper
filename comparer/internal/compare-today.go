@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	shared "shared/pkg"
+	"sort"
 	"strings"
 	"time"
 )
@@ -29,6 +30,9 @@ func CompareTodayToPrevious() (
 	if err != nil {
 		return "", err
 	}
+	// Look from most recent to oldest
+	sort.Sort(sort.Reverse(sort.StringSlice(objects)))
+
 	var previousFile string
 	for _, file := range objects {
 		fileTime, err := shared.GetTimeFromKey(file)

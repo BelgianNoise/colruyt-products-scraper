@@ -3,7 +3,6 @@ package shared
 import (
 	"encoding/json"
 	"sort"
-	"strings"
 )
 
 func GetProducts(
@@ -47,13 +46,7 @@ func GetLatestProductsKey(
 	if err != nil {
 		return "", err
 	}
-	objs := []string{}
-	for _, obj := range allobjs {
-		if strings.HasPrefix(obj, "colruyt-products/") {
-			objs = append(objs, obj)
-		}
-	}
-	sort.Sort(sort.Reverse(sort.StringSlice(objs)))
+	sort.Sort(sort.Reverse(sort.StringSlice(allobjs)))
 
-	return objs[0], nil
+	return allobjs[0], nil
 }

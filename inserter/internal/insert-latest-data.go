@@ -14,6 +14,7 @@ func InsertLatestData() error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("==========      Inserting data from", key)
 	products, err := shared.GetProducts(shared.GCSBucket, key)
 	if err != nil {
 		return err
