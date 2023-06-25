@@ -20,8 +20,7 @@ func CompareTodayToPrevious() (
 		return "", fmt.Errorf("no file found for today, last file: %q, today: %q", latestKey, today)
 	}
 
-	lastFileDateString := strings.Split(strings.Split(latestKey, "/")[1], ".")[0]
-	lastFileTime, err := time.Parse("2006-01-02-15-04-05", lastFileDateString)
+	lastFileTime, err := shared.GetTimeFromKey(latestKey)
 	if err != nil {
 		return "", err
 	}
@@ -32,8 +31,7 @@ func CompareTodayToPrevious() (
 	}
 	var previousFile string
 	for _, file := range objects {
-		dateString := strings.Split(strings.Split(file, "/")[1], ".")[0]
-		fileTime, err := time.Parse("2006-01-02-15-04-05", dateString)
+		fileTime, err := shared.GetTimeFromKey(file)
 		if err != nil {
 			continue
 		}

@@ -138,3 +138,4 @@ WITH (
 ALTER TABLE IF EXISTS products.price
     OWNER to postgres;
 
+GRANT USAGE ON SEQUENCE products.price_id_seq TO creator;

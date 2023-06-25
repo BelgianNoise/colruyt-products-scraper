@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	shared "shared/pkg"
-	"strconv"
-	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -45,70 +43,32 @@ func InsertLatestData() error {
 		productChunks = append(productChunks, products[i:end])
 	}
 
-	fmt.Println("Starting insertion of", len(products), "products")
+	fmt.Println("Starting insertion of", len(products), "products and prices")
+	time, err := shared.GetTimeFromKey(key)
+	if err != nil {
+		return err
+	}
 
 	for _, chunk := range productChunks {
 
-		query := `INSERT INTO products.product (
-			` + strings.Join(shared.ProductColumns, ", ") + `
-		) VALUES `
-
-		values := []string{}
-		for _, product := range chunk {
-			v := `(
-				'` + cleanString(product.ProductID) + `',
-				'` + cleanString(product.Name) + `',
-				'` + cleanString(product.LongName) + `',
-				'` + cleanString(product.ShortName) + `',
-				'` + cleanString(product.Content) + `',
-				'` + cleanString(product.FullImage) + `',
-				'` + cleanString(product.SquareImage) + `',
-				'` + cleanString(product.ThumbNail) + `',
-				'` + cleanString(product.CommercialArticleNumber) + `',
-				'` + cleanString(product.TechnicalArticleNumber) + `',
-				'` + cleanString(product.AlcoholVolume) + `',
-				'` + cleanString(product.CountryOfOrigin) + `',
-				'` + cleanString(product.FicCode) + `',
-				'` + strconv.FormatBool(product.IsBiffe) + `',
-				'` + strconv.FormatBool(product.IsBio) + `',
-				'` + strconv.FormatBool(product.IsExclusivelySoldInLuxembourg) + `',
-				'` + strconv.FormatBool(product.IsNew) + `',
-				'` + strconv.FormatBool(product.IsPrivateLabel) + `',
-				'` + strconv.FormatBool(product.IsWeightArticle) + `',
-				'` + cleanString(product.OrderUnit) + `',
-				'` + cleanString(product.RecentQuanityOfStockUnits) + `',
-				'` + cleanString(product.WeightconversionFactor) + `',
-				'` + cleanString(product.Brand) + `',
-				'` + cleanString(product.BusinessDomain) + `',
-				'` + strconv.FormatBool(product.IsAvailable) + `',
-				'` + cleanString(product.SeoBrand) + `',
-				'` + cleanString(product.TopCategoryId) + `',
-				'` + cleanString(product.TopCategoryName) + `',
-				'` + strconv.Itoa(product.WalkRouteSequenceNumber) + `'
-			)`
-			values = append(values, v)
-		}
-
-		query += strings.Join(values, ",")
-		query += ` ON CONFLICT (id) DO UPDATE SET (
-			` + strings.Join(shared.ProductColumns, ",") + `
-		) = (
-			EXCLUDED.` + strings.Join(shared.ProductColumns, ",EXCLUDED.") + `
-		)`
-
+		prodsQuery := GenerateInsertProductsQuery(chunk)
 		fmt.Println(" - Inserting or updating", len(chunk), "products")
-		// fmt.Println(query)
-		rows, err := db.Query(query)
+		rows, err := db.Query(prodsQuery)
 		if err != nil {
 			return err
 		}
 		rows.Close()
+
+		pricesQuery := GenerateInsertPricesQuery(chunk, time)
+		fmt.Println(" - Inserting or updating", len(chunk), "prices")
+		rows, err = db.Query(pricesQuery)
+		if err != nil {
+			return err
+		}
+		rows.Close()
+
 	}
 
 	fmt.Println("Insertion done!")
 	return nil
-}
-
-func cleanString(s string) string {
-	return strings.ReplaceAll(s, "'", "''")
 }
