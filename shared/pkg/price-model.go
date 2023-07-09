@@ -19,4 +19,5 @@ var PriceColumns = []string{
 	"measurement_unit_price",
 	"recommended_quantity",
 	"time",
+	"promotion",
 }

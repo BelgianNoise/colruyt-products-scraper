@@ -19,6 +19,14 @@ func GenerateInsertPricesQuery(
 
 	values := []string{}
 	for _, product := range products {
+		promos := []string{}
+		for _, promo := range product.Promotion {
+			promos = append(promos, fmt.Sprintf("%s_%s_%s", promo.ID, promo.PublicationStartDate, promo.PublicationEndDate))
+		}
+		promosString := "NULL"
+		if len(promos) > 0 {
+			promosString = strings.Join(promos, ",")
+		}
 		v := `(
 			'` + CleanString(product.ProductID) + `',
 			'` + fmt.Sprintf("%f", product.Price.BasicPrice) + `',
@@ -29,7 +37,8 @@ func GenerateInsertPricesQuery(
 			'` + CleanString(product.Price.MeasurementUnit) + `',
 			'` + fmt.Sprintf("%f", product.Price.MeasurementUnitPrice) + `',
 			'` + CleanString(product.Price.RecommendedQuantity) + `',
-			'` + timeString.UTC().Format(time.RFC3339) + `'
+			'` + timeString.UTC().Format(time.RFC3339) + `',
+			'` + promosString + `'
 		)`
 		values = append(values, v)
 	}

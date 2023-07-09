@@ -105,7 +105,6 @@ func GetAllProducts() (
 	if err != nil {
 		return []shared.Product{}, err
 	}
-	fmt.Printf("Should retrieve %d products\n", initResp.ProductsFound)
 
 	pages := initResp.ProductsFound/pageSize + 1
 
@@ -118,6 +117,8 @@ func GetAllProducts() (
 	alreadyAdded := map[string]bool{}
 
 	productsRequired := int(float64(initResp.ProductsFound) * percentageRequired)
+	percentRequiredString := int(percentageRequired * 100)
+	fmt.Printf("Should retrieve at least %d products out of %d (%d%s)\n", productsRequired, initResp.ProductsFound, percentRequiredString, "%")
 
 	// For some absolute bonkers reason the API likes to go wild and return
 	// different objects for the same page.

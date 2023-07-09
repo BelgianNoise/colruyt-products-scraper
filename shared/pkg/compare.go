@@ -56,7 +56,7 @@ func Compare(
 							LongName:              laterProduct.LongName,
 							PriceChange:           change,
 							PriceChangePercentage: (change) / earlierProduct.Price.BasicPrice,
-							InvolvesPromotion:     laterProduct.Price.IsRedPrice || earlierProduct.Price.IsRedPrice,
+							InvolvesPromotion:     len(laterProduct.Promotion) > 0 || len(earlierProduct.Promotion) > 0 || laterProduct.Price.IsRedPrice || earlierProduct.Price.IsRedPrice,
 							OldPrice:              earlierProduct.Price,
 							Price:                 laterProduct.Price,
 							Product:               laterProduct,
