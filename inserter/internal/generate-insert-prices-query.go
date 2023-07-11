@@ -23,7 +23,7 @@ func GenerateInsertPricesQuery(
 		for _, promo := range product.Promotion {
 			promos = append(promos, fmt.Sprintf("%s_%s_%s", promo.ID, promo.PublicationStartDate, promo.PublicationEndDate))
 		}
-		promosString := "NULL"
+		promosString := ""
 		if len(promos) > 0 {
 			promosString = strings.Join(promos, ",")
 		}
