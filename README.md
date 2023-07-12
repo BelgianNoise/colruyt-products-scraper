@@ -9,10 +9,4 @@ I wanted to create this because I find it very interesting to know which product
 
 All data is also stored in a PostgreSQL database. This one is however not publicly available (for now) because of possible cost implications.
 
-### The end goal is:
-- to create an accompanying frontend that
-  - allows for filtering and viewing product listings from any date.
-  - lists price changes
-  - compare prices from any date available
-  - (Need to fill the bucket with some data first)
-- create some kind of notifications system to notify of the biggest price changes of that day or week (maybe useing [Resend](https://resend.com/) ? )
+A frontend to display all the data can be found at: https://colruyt-prijzen.nasaj.be/ - source: https://github.com/BelgianNoise/colruyt-price-history
