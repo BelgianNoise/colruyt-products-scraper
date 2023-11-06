@@ -20,4 +20,5 @@ var PriceColumns = []string{
 	"recommended_quantity",
 	"time",
 	"promotion",
+	"promo_codes",
 }

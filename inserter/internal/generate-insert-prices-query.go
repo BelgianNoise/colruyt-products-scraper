@@ -27,6 +27,11 @@ func GenerateInsertPricesQuery(
 		if len(promos) > 0 {
 			promosString = strings.Join(promos, ",")
 		}
+		promoCodes := []string{}
+		for _, promo := range product.Promotion {
+			promoCodes = append(promoCodes, promo.TechPromoID)
+		}
+		promoCodesString := strings.Join(promoCodes, ",")
 		v := `(
 			'` + CleanString(product.ProductID) + `',
 			'` + fmt.Sprintf("%f", product.Price.BasicPrice) + `',
@@ -39,6 +44,7 @@ func GenerateInsertPricesQuery(
 			'` + CleanString(product.Price.RecommendedQuantity) + `',
 			'` + timeString.UTC().Format(time.RFC3339) + `',
 			'` + promosString + `'
+			'` + promoCodesString + `'
 		)`
 		values = append(values, v)
 	}

@@ -98,7 +98,7 @@ func GetAllProducts() (
 ) {
 
 	pageSize := 250
-	limit := 50
+	concurrencyLimit := 50
 	percentageRequired := 100.0 / 100.0
 
 	initResp, err := DoAPICall(1, 1, false)
@@ -108,8 +108,7 @@ func GetAllProducts() (
 
 	pages := initResp.ProductsFound/pageSize + 1
 
-	// Limit to 5 concurrent requests, limit set by ScraperAPI Free plan
-	limiter := make(chan int, limit)
+	limiter := make(chan int, concurrencyLimit)
 	defer close(limiter)
 	wg := sync.WaitGroup{}
 
