@@ -11,8 +11,10 @@ import (
 
 var Sockets = []string{}
 
-func initSslProxies() (sockets []string, err error) {
-	resp, err := http.Get("https://www.sslproxies.org/")
+// ssl proxies and many other websites use the same html
+// structure for their proxy lists, so we can use this.
+func genericInit(url string) (sockets []string, err error) {
+	resp, err := http.Get(url)
 	if err != nil {
 		return []string{}, err
 	}
@@ -32,6 +34,14 @@ func initSslProxies() (sockets []string, err error) {
 		sockets = append(sockets, socket)
 	}
 	return sockets, nil
+}
+
+func initSslProxies() (sockets []string, err error) {
+	return genericInit("https://www.sslproxies.org/")
+}
+
+func initUsProxy() (sockets []string, err error) {
+	return genericInit("https://us-proxy.org/")
 }
 
 func initProxyPremium() (sockets []string, err error) {
@@ -63,6 +73,10 @@ func InitSockets() {
 	sslProxies, err := initSslProxies()
 	if err == nil {
 		Sockets = append(Sockets, sslProxies...)
+	}
+	usProxies, err := initUsProxy()
+	if err == nil {
+		Sockets = append(Sockets, usProxies...)
 	}
 	spys, err := initProxyPremium()
 	if err == nil {
