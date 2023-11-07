@@ -43,7 +43,7 @@ func GenerateInsertPricesQuery(
 			'` + fmt.Sprintf("%f", product.Price.MeasurementUnitPrice) + `',
 			'` + CleanString(product.Price.RecommendedQuantity) + `',
 			'` + timeString.UTC().Format(time.RFC3339) + `',
-			'` + promosString + `'
+			'` + promosString + `',
 			'` + promoCodesString + `'
 		)`
 		values = append(values, v)
