@@ -125,6 +125,7 @@ CREATE TABLE products.price
     recommended_quantity text NOT NULL,
     "time" timestamp with time zone NOT NULL,
     promotion text DEFAULT NULL,
+    promo_codes text DEFAULT NULL,
     PRIMARY KEY (product_id, "time"),
     FOREIGN KEY (product_id)
         REFERENCES products.product (id) MATCH SIMPLE
