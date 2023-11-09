@@ -20,4 +20,13 @@ func Scrape() {
 		panic(dbErr)
 	}
 	fmt.Println("==========     Saving to GCS done!     ==========")
+	fmt.Println("==========     Scraping promotion data...     ==========")
+	promos := GetAllPromotions(products)
+	fmt.Println("==========     Scraping promotion data done!    ==========")
+	fmt.Println("==========     Saving promotion data to GCS ...     ==========")
+	dbErr = SavePromotionsToGCS(promos)
+	if dbErr != nil {
+		panic(dbErr)
+	}
+	fmt.Println("==========     Saving promotion data to GCS done!     ==========")
 }
