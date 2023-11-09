@@ -96,10 +96,20 @@ func GetAllProducts() (
 	products []shared.Product,
 	err error,
 ) {
+	return GetAllProductsWithParams(100.0, 50, 250, true)
+}
 
-	pageSize := 250
-	concurrencyLimit := 50
-	percentageRequired := 100.0 / 100.0
+func GetAllProductsWithParams(
+	percentageRequiredOutOf100 float64,
+	concurrencyLimit int,
+	pageSize int,
+	useProxy bool,
+) (
+	products []shared.Product,
+	err error,
+) {
+
+	percentageRequired := percentageRequiredOutOf100 / 100.0
 
 	initResp, err := DoAPICall(1, 1, false)
 	if err != nil {
@@ -148,7 +158,7 @@ waitTillWeGotEnoughProducts:
 			go func(page int) {
 				defer wg.Done()
 				defer func() { <-limiter }()
-				responseObject, err := DoAPICall(page, pageSize, true)
+				responseObject, err := DoAPICall(page, pageSize, useProxy)
 				if err != nil {
 					fmt.Println(err)
 				}
