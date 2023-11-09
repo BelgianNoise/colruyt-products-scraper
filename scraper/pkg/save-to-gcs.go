@@ -22,3 +22,19 @@ func SaveProductsToGCS(products []shared.Product) error {
 
 	return nil
 }
+
+func SavePromotionsToGCS(promotions []shared.Promotion) error {
+	for _, promo := range promotions {
+		serialized, err := json.Marshal(promo)
+		if err != nil {
+			return fmt.Errorf("failed to serialize promotion: %v", err)
+		}
+		key := "promotions/" + promo.PromotionID + ".json"
+
+		errWrite := shared.SaveJSONToGCS(shared.GCSBucket, key, serialized)
+		if errWrite != nil {
+			return errWrite
+		}
+	}
+	return nil
+}
