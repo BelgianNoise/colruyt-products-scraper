@@ -74,10 +74,11 @@ func InitSockets() {
 	if err == nil {
 		Sockets = append(Sockets, sslProxies...)
 	}
-	usProxies, err := initUsProxy()
-	if err == nil {
-		Sockets = append(Sockets, usProxies...)
-	}
+	// Very unreliable :/
+	// usProxies, err := initUsProxy()
+	// if err == nil {
+	// 	Sockets = append(Sockets, usProxies...)
+	// }
 	spys, err := initProxyPremium()
 	if err == nil {
 		Sockets = append(Sockets, spys...)
