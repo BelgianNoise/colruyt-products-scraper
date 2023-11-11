@@ -141,3 +141,27 @@ ALTER TABLE IF EXISTS products.price
     OWNER to postgres;
 
 GRANT USAGE ON SEQUENCE products.price_id_seq TO creator;
+
+CREATE TABLE products.promotion
+(
+    promotion_id text NOT NULL,
+    active_end_date text NOT NULL,
+    active_start_date text NOT NULL,
+    benefit text NOT NULL,
+    linked_products text NOT NULL,
+    commercial_promotion_id text NOT NULL,
+    folder_id text NOT NULL,
+    max_times integer NOT NULL,
+    personalised boolean NOT NULL,
+    promotion_kind text NOT NULL,
+    promotion_type text NOT NULL,
+    publication_end_date text NOT NULL,
+    publication_start_date text NOT NULL,
+    PRIMARY KEY (promotion_id)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE IF EXISTS products.promotion
+    OWNER to postgres;
