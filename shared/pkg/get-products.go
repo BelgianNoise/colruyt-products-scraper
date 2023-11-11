@@ -42,7 +42,7 @@ func GetLatestProductsKey(
 	key string,
 	err error,
 ) {
-	allobjs, err := ListBucketObjects(bucket)
+	allobjs, err := ListBucketObjects(bucket, "colruyt-products/")
 	if err != nil {
 		return "", err
 	}

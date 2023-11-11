@@ -10,6 +10,7 @@ import (
 
 func ListBucketObjects(
 	bucket string,
+	prefix string,
 ) (
 	objects []string,
 	err error,
@@ -26,7 +27,7 @@ func ListBucketObjects(
 	buck := client.Bucket(bucket)
 	// list all objects in the colruyt-product folder
 	objs := buck.Objects(ctx, &storage.Query{
-		Prefix: "colruyt-products/",
+		Prefix: prefix,
 	})
 
 	for {

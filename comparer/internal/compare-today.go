@@ -26,7 +26,7 @@ func CompareTodayToPrevious() (
 		return "", err
 	}
 
-	objects, err := shared.ListBucketObjects(shared.GCSBucket)
+	objects, err := shared.ListBucketObjects(shared.GCSBucket, "colruyt-products/")
 	if err != nil {
 		return "", err
 	}
