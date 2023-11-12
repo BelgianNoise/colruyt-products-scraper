@@ -116,6 +116,8 @@ CREATE TABLE products.price
     id SERIAL NOT NULL,
     product_id text NOT NULL,
     basic_price numeric NOT NULL,
+    quantity_price numeric,
+    quantity_price_quantity text,
     is_red_price boolean NOT NULL,
     in_promo boolean NOT NULL,
     in_pre_condition_promo boolean NOT NULL,

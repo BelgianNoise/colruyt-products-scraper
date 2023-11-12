@@ -35,6 +35,8 @@ func GenerateInsertPricesQuery(
 		v := `(
 			'` + CleanString(product.ProductID) + `',
 			'` + fmt.Sprintf("%f", product.Price.BasicPrice) + `',
+			'` + fmt.Sprintf("%f", product.Price.QuantityPrice) + `',
+			'` + CleanString(product.Price.QuantityPriceQuantity) + `',
 			'` + strconv.FormatBool(product.Price.IsRedPrice) + `',
 			'` + strconv.FormatBool(product.InPromo) + `',
 			'` + strconv.FormatBool(product.InPreConditionPromo) + `',
