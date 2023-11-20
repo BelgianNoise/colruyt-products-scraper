@@ -3,7 +3,8 @@ name: Scraper, Comparer, Inserter
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    # RUN DAILY AT 06:00 UTC
+    - cron: '0 6 * * *'
 
 jobs:
   
