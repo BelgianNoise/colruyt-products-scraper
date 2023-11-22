@@ -116,6 +116,8 @@ func GetAllProductsWithParams(
 		return []shared.Product{}, err
 	}
 
+	shared.InitProxyVars()
+
 	pages := initResp.ProductsFound/pageSize + 1
 
 	limiter := make(chan int, concurrencyLimit)
