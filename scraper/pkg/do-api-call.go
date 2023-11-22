@@ -96,7 +96,7 @@ func GetAllProducts() (
 	products []shared.Product,
 	err error,
 ) {
-	return GetAllProductsWithParams(100.0, 50, 250, true)
+	return GetAllProductsWithParams(100.0, 20, 250, true)
 }
 
 func GetAllProductsWithParams(
