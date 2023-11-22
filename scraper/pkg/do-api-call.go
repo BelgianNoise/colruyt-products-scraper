@@ -111,12 +111,12 @@ func GetAllProductsWithParams(
 
 	percentageRequired := percentageRequiredOutOf100 / 100.0
 
-	initResp, err := DoAPICall(1, 1, false)
+	shared.InitProxyVars()
+
+	initResp, err := DoAPICall(1, 1, useProxy)
 	if err != nil {
 		return []shared.Product{}, err
 	}
-
-	shared.InitProxyVars()
 
 	pages := initResp.ProductsFound/pageSize + 1
 
