@@ -16,6 +16,10 @@ jobs:
       - uses: actions/checkout@v3
       - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
       - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
+      - run: 'echo "USE_PRIVATE_PROXY=${{ secrets.USE_PRIVATE_PROXY }}" >> .env'
+      - run: 'echo "PRIVATE_PROXY_HOST=${{ secrets.PRIVATE_PROXY_HOST }}" >> .env'
+      - run: 'echo "PRIVATE_PROXY_USERNAME=${{ secrets.PRIVATE_PROXY_USERNAME }}" >> .env'
+      - run: 'echo "PRIVATE_PROXY_PASSWORD=${{ secrets.PRIVATE_PROXY_PASSWORD }}" >> .env'
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec
   
