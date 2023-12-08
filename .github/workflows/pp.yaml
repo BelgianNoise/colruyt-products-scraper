@@ -1,0 +1,20 @@
+name: Prettige Prijzen
+
+on:
+  workflow_dispatch:
+  schedule:
+    # RUN EVERY 4 HOURS
+    - cron: '0 */4 * * *'
+
+jobs:
+
+  pp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: 'echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" >> .env'
+      - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
+      - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
+      - run: go build -o pp-exec ./pp
+      - run: ./pp-exec
