@@ -55,8 +55,8 @@ func main() {
 					END)::numeric)
 					* 0.01
 					* (CASE WHEN price.quantity_price > 0
-						 THEN price.quantity_price
-						 ELSE price.basic_price
+							THEN price.quantity_price
+							ELSE price.basic_price
 						END)
 					as best_price,
 				AVG(prices_for_avg.basic_price) as thirty_day_avg
@@ -146,6 +146,22 @@ func main() {
 	}
 
 	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp.json", serialized)
+	if err != nil {
+		println("Issue writing to GCS: " + err.Error())
+		panic(err)
+	}
+
+	miniDoc := docObject{
+		Date: time.Now(),
+		Data: results[:10],
+	}
+
+	serialized, err = json.Marshal(miniDoc)
+	if err != nil {
+		panic(err)
+	}
+
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-mini.json", serialized)
 	if err != nil {
 		println("Issue writing to GCS: " + err.Error())
 		panic(err)
