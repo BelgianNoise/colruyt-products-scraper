@@ -110,7 +110,7 @@ func CompareTodayToPrevious() (
 	if err != nil {
 		return "", err
 	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterke-stijgers/ss.json", increasesSerialized)
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterkste-stijgers/ss.json", increasesSerialized)
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +125,7 @@ func CompareTodayToPrevious() (
 	if err != nil {
 		return "", err
 	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterke-stijgers/ss-mini.json", increasesMiniSerialized)
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterkste-stijgers/ss-mini.json", increasesMiniSerialized)
 	if err != nil {
 		return "", err
 	}
