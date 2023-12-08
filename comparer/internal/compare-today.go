@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	shared "shared/pkg"
 	"sort"
@@ -49,10 +50,86 @@ func CompareTodayToPrevious() (
 		return "", fmt.Errorf("no previous file %q or last file %q", previousFile, latestKey)
 	}
 
-	jsonFileLocation, errCompare := shared.Compare(latestKey, previousFile, false)
+	jsonFileLocation, changes, errCompare := shared.Compare(latestKey, previousFile, false)
 	if errCompare != nil {
 		return "", fmt.Errorf("error comparing %q to %q: %v", latestKey, previousFile, errCompare)
 	}
+
+	println("Sorting changes...")
+
+	var increases = []shared.PriceDifference{}
+	var decreases = []shared.PriceDifference{}
+	for _, d := range changes {
+		if d.PriceChangePercentage >= 0.01 {
+			increases = append(increases, d)
+		} else if d.PriceChangePercentage <= -0.01 {
+			decreases = append(decreases, d)
+		}
+	}
+	sort.Slice(increases, func(i, j int) bool {
+		return increases[i].PriceChangePercentage > increases[j].PriceChangePercentage
+	})
+	sort.Slice(decreases, func(i, j int) bool {
+		return decreases[i].PriceChangePercentage < decreases[j].PriceChangePercentage
+	})
+
+	println("Saving decreases...")
+	decreasesSerialized, err := json.Marshal(map[string]interface{}{
+		"date": time.Now(),
+		"data": decreases,
+	})
+	if err != nil {
+		return "", err
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "drastische-dalers/dd.json", decreasesSerialized)
+	if err != nil {
+		return "", err
+	}
+	decMiniLength := 10
+	if len(decreases) < decMiniLength {
+		decMiniLength = len(decreases)
+	}
+	decreasesMiniSerialized, err := json.Marshal(map[string]interface{}{
+		"date": time.Now(),
+		"data": decreases[:decMiniLength],
+	})
+	if err != nil {
+		return "", err
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "drastische-dalers/dd-mini.json", decreasesMiniSerialized)
+	if err != nil {
+		return "", err
+	}
+	println("Done saving decreases!")
+
+	println("Saving increases...")
+	increasesSerialized, err := json.Marshal(map[string]interface{}{
+		"date": time.Now(),
+		"data": increases,
+	})
+	if err != nil {
+		return "", err
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterke-stijgers/ss.json", increasesSerialized)
+	if err != nil {
+		return "", err
+	}
+	increasesMiniLength := 10
+	if len(increases) < increasesMiniLength {
+		increasesMiniLength = len(increases)
+	}
+	increasesMiniSerialized, err := json.Marshal(map[string]interface{}{
+		"date": time.Now(),
+		"data": increases[:increasesMiniLength],
+	})
+	if err != nil {
+		return "", err
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterke-stijgers/ss-mini.json", increasesMiniSerialized)
+	if err != nil {
+		return "", err
+	}
+	println("Done saving increases!")
 
 	return jsonFileLocation, nil
 }
