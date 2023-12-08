@@ -171,15 +171,15 @@ func main() {
 }
 
 type queryResult struct {
-	ProductID             int     `json:"product_id"`
-	LongName              string  `json:"long_name"`
-	SquareImage           string  `json:"square_image"`
-	BasicPrice            float64 `json:"basic_price"`
+	ProductID             int     `json:"productId"`
+	LongName              string  `json:"longName"`
+	SquareImage           string  `json:"squareImage"`
+	BasicPrice            float64 `json:"basicPrice"`
 	Benefit               string  `json:"benefit"`
-	QuantityPrice         float64 `json:"quantity_price"`
-	QuantityPriceQuantity string  `json:"quantity_price_quantity"`
-	BestPrice             float64 `json:"best_price"`
-	ThirtyDayAvg          float64 `json:"thirty_day_avg"`
+	QuantityPrice         float64 `json:"quantityPrice"`
+	QuantityPriceQuantity string  `json:"quantityPriceQuantity"`
+	BestPrice             float64 `json:"bestPrice"`
+	ThirtyDayAvg          float64 `json:"thirtyDayAvg"`
 	Diff                  int     `json:"diff"`
 }
 
