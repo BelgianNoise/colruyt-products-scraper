@@ -1,0 +1,16 @@
+name: Comparer
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  Comparer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
+      - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
+      - run: go build -o comparer-exec ./comparer
+      - run: ./comparer-exec

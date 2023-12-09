@@ -2,9 +2,6 @@ name: Prettige Prijzen
 
 on:
   workflow_dispatch:
-  schedule:
-    # RUN EVERY 4 HOURS
-    - cron: '0 */4 * * *'
 
 jobs:
 

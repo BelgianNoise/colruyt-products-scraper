@@ -1,45 +1,24 @@
-name: Scraper, Comparer, Inserter
+name: Daily Run
 
 on:
   workflow_dispatch:
   schedule:
-    # RUN DAILY AT 08:00 UTC
-    - cron: '0 8 * * *'
+    # RUN DAILY AT 09:00 UTC
+    - cron: '0 9 * * *'
 
 jobs:
 
   Scraper:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v3
-      - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
-      - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
-      - run: 'echo "USE_PRIVATE_PROXY=${{ secrets.USE_PRIVATE_PROXY }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_HOST=${{ secrets.PRIVATE_PROXY_HOST }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_USERNAME=${{ secrets.PRIVATE_PROXY_USERNAME }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_PASSWORD=${{ secrets.PRIVATE_PROXY_PASSWORD }}" >> .env'
-      - run: go build -o scraper-exec ./scraper
-      - run: ./scraper-exec
+    uses: ./.github/actions/scraper.yaml
 
   Comparer:
-    runs-on: ubuntu-latest
     needs: Scraper
-
-    steps:
-      - uses: actions/checkout@v3
-      - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
-      - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
-      - run: go build -o comparer-exec ./comparer
-      - run: ./comparer-exec
+    uses: ./.github/actions/comparer.yaml
 
   Inserter:
-    runs-on: ubuntu-latest
     needs: Scraper
+    uses: ./.github/actions/inserter.yaml
 
-    steps:
-      - uses: actions/checkout@v3
-      - run: 'echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" >> .env'
-      - run: go build -o inserter-exec ./inserter
-      - run: ./inserter-exec
+  PP:
+    needs: Inserter
+    uses: ./.github/actions/pp.yaml

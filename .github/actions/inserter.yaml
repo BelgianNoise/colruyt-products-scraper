@@ -1,0 +1,16 @@
+name: Inserter
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+
+  Inserter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: 'echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" >> .env'
+      - run: go build -o inserter-exec ./inserter
+      - run: ./inserter-exec
