@@ -2,6 +2,7 @@ name: Inserter
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
 

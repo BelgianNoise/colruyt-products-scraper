@@ -2,6 +2,7 @@ name: Prettige Prijzen
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
 
