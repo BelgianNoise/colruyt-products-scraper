@@ -10,15 +10,19 @@ jobs:
 
   Scraper:
     uses: ./.github/workflows/scraper.yaml
+    secrets: inherit
 
   Comparer:
     needs: Scraper
     uses: ./.github/workflows/comparer.yaml
+    secrets: inherit
 
   Inserter:
     needs: Scraper
     uses: ./.github/workflows/inserter.yaml
+    secrets: inherit
 
   PP:
     needs: Inserter
     uses: ./.github/workflows/pp.yaml
+    secrets: inherit
