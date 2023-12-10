@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
   schedule:
     # RUN DAILY AT 09:00 UTC
-    - cron: '0 9 * * *'
+    - cron: '0 8 * * *'
 
 jobs:
 
   Scraper:
-    uses: ./.github/actions/scraper.yaml
+    uses: ./.github/workflows/scraper.yaml
 
   Comparer:
     needs: Scraper
-    uses: ./.github/actions/comparer.yaml
+    uses: ./.github/workflows/comparer.yaml
 
   Inserter:
     needs: Scraper
-    uses: ./.github/actions/inserter.yaml
+    uses: ./.github/workflows/inserter.yaml
 
   PP:
     needs: Inserter
-    uses: ./.github/actions/pp.yaml
+    uses: ./.github/workflows/pp.yaml

@@ -3,7 +3,6 @@ name: Inserter
 on:
   workflow_dispatch:
 
-
 jobs:
 
   Inserter:
