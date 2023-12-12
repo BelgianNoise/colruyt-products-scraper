@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	shared "shared/pkg"
+	"sort"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -110,6 +111,7 @@ func main() {
 			newResults = append(newResults, result)
 		}
 	}
+	fmt.Printf("There are %d new great deals!\n", len(newResults))
 	// Save the compared results to pp-changes.json
 	changesDoc := docObject{
 		Date: time.Now(),
@@ -217,7 +219,7 @@ func doQuery() (results []queryResult, err error) {
 				ON pr.id = price.product_id
 				LEFT JOIN
 				products.promotion as promo
-				ON promo.promotion_id = price.promo_codes
+				ON promo.promotion_id = ANY(STRING_TO_ARRAY(price.promo_codes, ','))
 			WHERE
 				prices_for_avg.time > now() - interval '30 day'
 				AND
@@ -257,7 +259,7 @@ func doQuery() (results []queryResult, err error) {
 	defer rows.Close()
 
 	println("Query executed.")
-
+	resMap := make(map[int]queryResult)
 	for rows.Next() {
 		var tempResult queryResult
 		err = rows.Scan(
@@ -276,7 +278,26 @@ func doQuery() (results []queryResult, err error) {
 			println("lil issue over here: " + err.Error())
 			continue
 		}
-		results = append(results, tempResult)
+		// Products can have multiple promotions at the same time
+		if existVal, ok := resMap[tempResult.ProductID]; !ok {
+			resMap[tempResult.ProductID] = tempResult
+		} else {
+			// Save the result with the highest diff
+			if tempResult.Diff > existVal.Diff {
+				resMap[tempResult.ProductID] = tempResult
+			}
+		}
 	}
+	err = rows.Err()
+	if err = rows.Err(); err != nil {
+		return []queryResult{}, err
+	}
+	for _, result := range resMap {
+		results = append(results, result)
+	}
+	// Resort because we used a map
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Diff > results[j].Diff
+	})
 	return results, nil
 }
