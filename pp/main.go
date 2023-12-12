@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	shared "shared/pkg"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -18,13 +20,158 @@ func main() {
 		panic(err)
 	}
 
+	results, err := doQuery()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Got %d results\n", len(results))
+
+	// Move existing pp.json to pp-old.json
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+	from := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp.json")
+	to := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp-old.json")
+	if _, err := to.CopierFrom(from).Run(context.Background()); err != nil {
+		panic(err)
+	}
+	fmt.Println("Moved pp.json to pp-old.json")
+	// Delete pp.json
+	if err := from.Delete(ctx); err != nil {
+		panic(err)
+	}
+	fmt.Println("Deleted pp.json")
+
+	// Save new results to pp.json
+	doc := docObject{
+		Date: time.Now(),
+		Data: results,
+	}
+	serialized, err := json.Marshal(doc)
+	if err != nil {
+		panic(err)
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp.json", serialized)
+	if err != nil {
+		println("Issue writing to GCS: " + err.Error())
+		panic(err)
+	}
+
+	// Save mini results to pp-mini.json
+	ppMiniLength := 10
+	if len(results) < ppMiniLength {
+		ppMiniLength = len(results)
+	}
+	miniDoc := docObject{
+		Date: time.Now(),
+		Data: results[:ppMiniLength],
+	}
+	serialized, err = json.Marshal(miniDoc)
+	if err != nil {
+		panic(err)
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-mini.json", serialized)
+	if err != nil {
+		println("Issue writing to GCS: " + err.Error())
+		panic(err)
+	}
+
+	fmt.Println("Starting compare...")
+
+	// Get pp-old.json to compare later
+	obj := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp-old.json")
+	reader, err := obj.NewReader(ctx)
+	if err != nil {
+		panic(err)
+	}
+	defer reader.Close()
+	var oldDoc docObject
+	err = json.NewDecoder(reader).Decode(&oldDoc)
+	if err != nil {
+		panic(err)
+	}
+	// Parse to map for easy comparison
+	oldMap := make(map[int]queryResult)
+	for _, result := range oldDoc.Data {
+		oldMap[result.ProductID] = result
+	}
+
+	// Compare new results to old results
+	var newResults = []queryResult{}
+	for _, result := range results {
+		oldResult, ok := oldMap[result.ProductID]
+		if !ok {
+			newResults = append(newResults, result)
+		} else if result.Diff-oldResult.Diff > 5 {
+			newResults = append(newResults, result)
+		}
+	}
+	// Save the compared results to pp-changes.json
+	changesDoc := docObject{
+		Date: time.Now(),
+		Data: newResults,
+	}
+	serialized, err = json.Marshal(changesDoc)
+	if err != nil {
+		panic(err)
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-changes.json", serialized)
+	if err != nil {
+		println("Issue writing to GCS: " + err.Error())
+		panic(err)
+	}
+	// Save mini compared results to pp-changes-mini.json
+	changesMiniLength := 10
+	if len(newResults) < changesMiniLength {
+		changesMiniLength = len(newResults)
+	}
+	changesMiniDoc := docObject{
+		Date: time.Now(),
+		Data: newResults[:changesMiniLength],
+	}
+	serialized, err = json.Marshal(changesMiniDoc)
+	if err != nil {
+		panic(err)
+	}
+	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-changes-mini.json", serialized)
+	if err != nil {
+		println("Issue writing to GCS: " + err.Error())
+		panic(err)
+	}
+
+	fmt.Println("PP Done, leggo!")
+}
+
+type queryResult struct {
+	ProductID             int     `json:"productId"`
+	LongName              string  `json:"longName"`
+	SquareImage           string  `json:"squareImage"`
+	BasicPrice            float64 `json:"basicPrice"`
+	Benefit               string  `json:"benefit"`
+	QuantityPrice         float64 `json:"quantityPrice"`
+	QuantityPriceQuantity string  `json:"quantityPriceQuantity"`
+	BestPrice             float64 `json:"bestPrice"`
+	ThirtyDayAvg          float64 `json:"thirtyDayAvg"`
+	Diff                  int     `json:"diff"`
+}
+
+type docObject struct {
+	Date time.Time     `json:"date"`
+	Data []queryResult `json:"data"`
+}
+
+func doQuery() (results []queryResult, err error) {
 	connectionString := fmt.Sprintf(
 		"postgres://%s?sslmode=disable",
 		os.Getenv("DB_CONNECTION_STRING"),
 	)
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		panic(err)
+		return
 	}
 	defer db.Close()
 	db.SetMaxOpenConns(5)
@@ -105,13 +252,12 @@ func main() {
 	ORDER BY diff DESC;
 	`)
 	if err != nil {
-		panic(err)
+		return
 	}
 	defer rows.Close()
 
 	println("Query executed.")
 
-	var results []queryResult = []queryResult{}
 	for rows.Next() {
 		var tempResult queryResult
 		err = rows.Scan(
@@ -132,58 +278,5 @@ func main() {
 		}
 		results = append(results, tempResult)
 	}
-
-	fmt.Printf("Got %d results\n", len(results))
-
-	doc := docObject{
-		Date: time.Now(),
-		Data: results,
-	}
-
-	serialized, err := json.Marshal(doc)
-	if err != nil {
-		panic(err)
-	}
-
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
-		panic(err)
-	}
-
-	miniDoc := docObject{
-		Date: time.Now(),
-		Data: results[:10],
-	}
-
-	serialized, err = json.Marshal(miniDoc)
-	if err != nil {
-		panic(err)
-	}
-
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-mini.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
-		panic(err)
-	}
-
-	fmt.Println("PP Done!")
-}
-
-type queryResult struct {
-	ProductID             int     `json:"productId"`
-	LongName              string  `json:"longName"`
-	SquareImage           string  `json:"squareImage"`
-	BasicPrice            float64 `json:"basicPrice"`
-	Benefit               string  `json:"benefit"`
-	QuantityPrice         float64 `json:"quantityPrice"`
-	QuantityPriceQuantity string  `json:"quantityPriceQuantity"`
-	BestPrice             float64 `json:"bestPrice"`
-	ThirtyDayAvg          float64 `json:"thirtyDayAvg"`
-	Diff                  int     `json:"diff"`
-}
-
-type docObject struct {
-	Date time.Time     `json:"date"`
-	Data []queryResult `json:"data"`
+	return results, nil
 }
