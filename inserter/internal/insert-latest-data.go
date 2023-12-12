@@ -88,7 +88,7 @@ func InsertPromotionData(
 	promotionObjects, err := shared.ListBucketObjectsInTimeRange(
 		shared.GCSBucket,
 		"promotions/",
-		time.Now().Add(20*time.Hour*-1),
+		time.Now().Add(48*time.Hour*-1),
 		time.Now(),
 	)
 	if err != nil {
