@@ -1,8 +1,28 @@
 package scraper
 
-var ColruytAPIEndpoint = "https://ecgproductmw.colruyt.be/ecgproductmw/v2/nl/products/"
-var ColruytAPIHost = "ecgproductmw.colruyt.be"
-var ColruytPlaceID = "605"
+import "os"
 
-var ColruytPromotionAPIEndpoint = "https://ecgpromotionmw.colruyt.be/ecgpromotionmw/v2/nl/promotion/"
-var ColruytPromotionAPIHost = "ecgpromotionmw.colruyt.be"
+var ColruytAPIEndpoint = ""
+var ColruytAPIHost = ""
+var ColruytPlaceID = ""
+
+var ColruytPromotionAPIEndpoint = ""
+var ColruytPromotionAPIHost = ""
+
+func InitVariables() {
+	ColruytAPIEndpoint = os.Getenv("COLRUYT_API_ENDPOINT_PRODUCTS")
+	ColruytAPIHost = os.Getenv("COLRUYT_API_ENDPOINT_HOST")
+	ColruytPromotionAPIEndpoint = os.Getenv("COLRUYT_API_ENDPOINT_PROMOTIONS")
+	ColruytPromotionAPIHost = os.Getenv("COLRUYT_API_ENDPOINT_HOST")
+
+	ColruytPlaceID = os.Getenv("COLRUYT_PLACE_ID")
+
+	if ColruytAPIEndpoint == "" ||
+		ColruytPromotionAPIEndpoint == "" ||
+		ColruytAPIHost == "" ||
+		ColruytPromotionAPIHost == "" ||
+		ColruytPlaceID == "" {
+		panic("Missing environment variables")
+	}
+
+}

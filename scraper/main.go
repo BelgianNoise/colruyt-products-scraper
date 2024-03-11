@@ -11,5 +11,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	scraper.InitVariables()
 	scraper.Scrape()
 }
