@@ -17,12 +17,20 @@ func InitVariables() {
 
 	ColruytPlaceID = os.Getenv("COLRUYT_PLACE_ID")
 
-	if ColruytAPIEndpoint == "" ||
-		ColruytPromotionAPIEndpoint == "" ||
-		ColruytAPIHost == "" ||
-		ColruytPromotionAPIHost == "" ||
-		ColruytPlaceID == "" {
-		panic("Missing environment variables")
+	if ColruytAPIEndpoint == "" {
+		panic("Missing environment variable COLRUYT_API_ENDPOINT_PRODUCTS")
+	}
+	if ColruytAPIHost == "" {
+		panic("Missing environment variable COLRUYT_API_ENDPOINT_HOST")
+	}
+	if ColruytPromotionAPIEndpoint == "" {
+		panic("Missing environment variable COLRUYT_API_ENDPOINT_PROMOTIONS")
+	}
+	if ColruytPromotionAPIHost == "" {
+		panic("Missing environment variable COLRUYT_API_ENDPOINT_HOST")
+	}
+	if ColruytPlaceID == "" {
+		panic("Missing environment variable COLRUYT_PLACE_ID")
 	}
 
 }
