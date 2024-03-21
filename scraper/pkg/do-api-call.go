@@ -119,13 +119,13 @@ func GetAllProducts() (
 // Not providing this header will result in a 401.
 func GetXCGAPIKey() (XCGAPIKey string, err error) {
 	var browser *rod.Browser
-	if os.Getenv("ENV") == "local" {
-		// !!!!!!!! Something is still broken here !!!!!!!!
+	var l *launcher.Launcher
+	if os.Getenv("HEADLESS") == "false" {
 		println("====== starting browser")
 
 		// Headless runs the browser on foreground, you can also use flag "-rod=show"
 		// Devtools opens the tab in each new tab opened automatically
-		l := launcher.New().
+		l = launcher.New().
 			Headless(false).
 			Devtools(true)
 
@@ -136,7 +136,7 @@ func GetXCGAPIKey() (XCGAPIKey string, err error) {
 		// Trace shows verbose debug information for each action executed
 		// SlowMotion is a debug related function that waits 2 seconds between
 		// each action, making it easier to inspect what your code is doing.
-		browser := rod.New().
+		browser = rod.New().
 			ControlURL(url).
 			Trace(true).
 			SlowMotion(2 * time.Second).
@@ -158,12 +158,20 @@ func GetXCGAPIKey() (XCGAPIKey string, err error) {
 	router := page.HijackRequests()
 	apikey := ""
 
-	router.MustAdd("*/search", func(ctx *rod.Hijack) {
+	routeHandler := func(ctx *rod.Hijack) {
 		// Get the value of the X-CG-APIKey header
-		apikey = ctx.Request.Header("X-CG-APIKey")
+		a := ctx.Request.Header("X-CG-APIKey")
+		if a != "" && a != "<nil>" {
+			fmt.Printf("API key %q found on URL %q \n", a, ctx.Request.URL().String())
+			apikey = a
+		} else {
+			fmt.Printf("No API key found on URL %q \n", ctx.Request.URL().String())
+		}
 		// Continue the request
 		ctx.MustLoadResponse()
-	})
+	}
+	router.MustAdd("*apix.colruytgroup.com*", routeHandler)
+	router.MustAdd("*apip.colruytgroup.com*", routeHandler)
 
 	go router.Run()
 
