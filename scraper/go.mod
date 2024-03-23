@@ -2,8 +2,6 @@ module scraper
 
 go 1.21
 
-toolchain go1.21.6
-
 require (
 	cloud.google.com/go/storage v1.30.1
 	github.com/joho/godotenv v1.5.1

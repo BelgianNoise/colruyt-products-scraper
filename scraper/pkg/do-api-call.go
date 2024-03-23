@@ -118,6 +118,11 @@ func GetAllProducts() (
 // Retrieve a valid X-CG-APIKey from the xframe.js script.
 // Not providing this header will result in a 401.
 func GetXCGAPIKey() (XCGAPIKey string, err error) {
+	// if the token is in the env variables, return it
+	if e := os.Getenv("X_CG_APIKEY"); e != "" {
+		return e, nil
+	}
+
 	var browser *rod.Browser
 	var l *launcher.Launcher
 	if os.Getenv("HEADLESS") == "false" {
@@ -195,7 +200,7 @@ func GetXCGAPIKey() (XCGAPIKey string, err error) {
 		}
 	}
 
-	return "", fmt.Errorf("No API key found after 90 seconds.")
+	return "", fmt.Errorf("no API key found after 90 seconds")
 }
 
 func GetAllProductsWithParams(
