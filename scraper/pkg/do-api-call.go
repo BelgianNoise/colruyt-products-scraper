@@ -112,7 +112,6 @@ func GetAllProducts() (
 	if os.Getenv("USE_PROXY") == "true" {
 		useProxies = true
 	}
-	println("Using proxies:", useProxies == "true")
 	return GetAllProductsWithParams(100.0, 20, 250, useProxies)
 }
 
@@ -214,6 +213,7 @@ func GetAllProductsWithParams(
 	err error,
 ) {
 
+	fmt.Printf("Using proxies: %v\n", useProxy)
 	APIKey, err := GetXCGAPIKey()
 	if err != nil {
 		return []shared.Product{}, err
