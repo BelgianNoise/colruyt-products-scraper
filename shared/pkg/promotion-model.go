@@ -12,7 +12,7 @@ type Promotion struct {
 	ActiveStartDate       string          `json:"activeStartDate"`
 	CommercialPromotionID string          `json:"commercialPromotionId"`
 	FolderID              string          `json:"folderId"`
-	MaxTimes              int             `json:"maxTimes"`
+	MaxTimes              string          `json:"maxTimes"`
 	Personalised          bool            `json:"personalised"`
 	PromotionID           string          `json:"promotionId"`
 	PromotionKind         string          `json:"promotionKind"`

@@ -8,7 +8,3 @@ type APIResponse struct {
 	ProductsAvailable int              `json:"productsAvailable"`
 	Products          []shared.Product `json:"products"`
 }
-
-type PromotionAPIResponse struct {
-	Promotions []shared.Promotion `json:"promotions"`
-}

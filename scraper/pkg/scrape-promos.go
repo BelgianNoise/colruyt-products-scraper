@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	shared "shared/pkg"
 )
 
@@ -16,7 +17,23 @@ func GetAllPromotions(
 	products []shared.Product,
 ) (
 	promotions []shared.Promotion,
+	err error,
 ) {
+
+	useProxies := false
+	if os.Getenv("USE_PROXY") == "true" {
+		useProxies = true
+	}
+
+	fmt.Printf("Using proxies: %v\n", useProxies)
+	APIKey, err := GetXCGAPIKey()
+	if err != nil {
+		return []shared.Promotion{}, err
+	}
+	fmt.Println("API key retrieved: " + APIKey)
+
+	shared.InitProxyVars()
+
 	var promotionIDMap = map[string]string{} // Simulate a Set
 	for _, prod := range products {
 		for _, promotion := range prod.Promotion {
@@ -29,9 +46,11 @@ func GetAllPromotions(
 	var promotionsScraped = map[string]shared.Promotion{}
 	for id, _ := range promotionIDMap {
 		if _, ok := promotionsScraped[id]; !ok {
-			promo, err := GetOnePromotion(id)
+			promo, err := GetOnePromotion(id, useProxies, APIKey)
 			if err == nil {
 				promotionsScraped[id] = promo
+			} else {
+				fmt.Println("Error getting promotion: ", err)
 			}
 		}
 	}
@@ -40,11 +59,13 @@ func GetAllPromotions(
 	}
 
 	fmt.Println("Promotions scraped: ", len(promotions))
-	return promotions
+	return promotions, nil
 }
 
 func getOnePromotionHelper(
-	promorionID string,
+	promotionID string,
+	useProxy bool,
+	XCGAPIKey string,
 ) (
 	promotion shared.Promotion,
 	err error,
@@ -56,7 +77,7 @@ func getOnePromotionHelper(
 	queryParams := requestUrl.Query()
 	queryParams.Set("clientCode", "CLP")
 	queryParams.Set("placeId", ColruytPlaceID)
-	queryParams.Set("promotionIds", promorionID)
+	queryParams.Set("promotionId", promotionID)
 	requestUrl.RawQuery = queryParams.Encode()
 
 	request, requestErr := http.NewRequest("GET", requestUrl.String(), nil)
@@ -64,26 +85,36 @@ func getOnePromotionHelper(
 		return promotion, requestErr
 	}
 	request.Header.Set("Accept", "application/json")
-	request.Header.Set("Host", ColruytPromotionAPIHost)
+	request.Header.Set("User-Agent", userAgent)
+	request.Header.Set("X-CG-APIKey", XCGAPIKey)
 
-	res, err := http.DefaultClient.Do(request)
+	var response *http.Response
+	var responseErr error
+
+	if useProxy {
+		response, responseErr = shared.UseProxy(request)
+	} else {
+		response, responseErr = http.DefaultClient.Do(request)
+	}
+	if responseErr != nil {
+		return promotion, responseErr
+	}
+
+	defer response.Body.Close()
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		return promotion, err
 	}
-	defer res.Body.Close()
-	bodyBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return promotion, err
-	}
-	var apiResponse PromotionAPIResponse
+
+	var apiResponse shared.Promotion
 	err = json.Unmarshal(bodyBytes, &apiResponse)
 	if err != nil {
 		return promotion, err
 	}
-	if len(apiResponse.Promotions) == 0 {
-		return promotion, fmt.Errorf("no promotion found for id %q", promorionID)
+	if apiResponse.PromotionID == "" {
+		return promotion, fmt.Errorf("no promotion found for id %q", promotionID)
 	}
-	return apiResponse.Promotions[0], nil
+	return apiResponse, nil
 }
 
 // Using tryCount like this only works if we are not running in goroutines.
@@ -91,6 +122,8 @@ var tryCount = 0
 
 func GetOnePromotion(
 	promorionID string,
+	useProxy bool,
+	XCGAPIKey string,
 ) (
 	promotion shared.Promotion,
 	err error,
@@ -99,9 +132,10 @@ func GetOnePromotion(
 	if tryCount > 5 {
 		return promotion, fmt.Errorf("[%q] Tried 5 times to get promotion", promorionID)
 	}
-	promotion, err = getOnePromotionHelper(promorionID)
+	promotion, err = getOnePromotionHelper(promorionID, useProxy, XCGAPIKey)
 	if err != nil {
-		return GetOnePromotion(promorionID)
+		fmt.Println(err.Error())
+		return GetOnePromotion(promorionID, useProxy, XCGAPIKey)
 	} else {
 		tryCount = 0
 		return promotion, nil
