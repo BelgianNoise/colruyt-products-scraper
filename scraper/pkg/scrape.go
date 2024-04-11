@@ -21,10 +21,7 @@ func Scrape() {
 	}
 	fmt.Println("==========     Saving to GCS done!     ==========")
 	fmt.Println("==========     Scraping promotion data...     ==========")
-	promos, err := GetAllPromotions(products)
-	if err != nil {
-		panic(err)
-	}
+	promos := GetAllPromotions(products)
 	fmt.Println("==========     Scraping promotion data done!    ==========")
 	fmt.Println("==========     Saving promotion data to GCS ...     ==========")
 	dbErr = SavePromotionsToGCS(promos)
