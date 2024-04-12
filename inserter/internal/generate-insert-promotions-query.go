@@ -36,7 +36,7 @@ func GenerateInsertPromotionsQuery(
 			'` + linkedProducts + `',
 			'` + promotion.CommercialPromotionID + `',
 			'` + promotion.FolderID + `',
-			'` + fmt.Sprintf("%v", promotion.MaxTimes) + `',
+			'` + promotion.MaxTimes + `',
 			'` + strconv.FormatBool(promotion.Personalised) + `',
 			'` + promotion.PromotionKind + `',
 			'` + promotion.PromotionType + `',
