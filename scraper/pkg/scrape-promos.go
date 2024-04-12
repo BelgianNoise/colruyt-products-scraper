@@ -131,6 +131,8 @@ func GetOnePromotion(
 ) {
 	tryCount++
 	if tryCount > 5 {
+		// Reset tryCount for next call
+		tryCount = 0
 		return promotion, fmt.Errorf("[%q] Tried 5 times to get promotion", promorionID)
 	}
 	promotion, err = getOnePromotionHelper(promorionID, useProxy, XCGAPIKey)
