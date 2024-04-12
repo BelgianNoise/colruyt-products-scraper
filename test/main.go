@@ -15,7 +15,7 @@ func main() {
 	}
 	scraper.InitVariables()
 
-	products, err := scraper.GetAllProductsWithParams(50.0, 2, 250, true)
+	products, err := scraper.GetAllProductsWithParams(30.0, 2, 250, true)
 	if err != nil {
 		panic(err)
 	}

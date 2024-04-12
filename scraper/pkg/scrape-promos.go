@@ -49,6 +49,7 @@ func GetAllPromotions(
 			promo, err := GetOnePromotion(id, useProxies, APIKey)
 			if err == nil {
 				promotionsScraped[id] = promo
+				fmt.Printf("Promotion scraped: %q\n", promo.PromotionID)
 			} else {
 				fmt.Println("Error getting promotion: ", err)
 			}
