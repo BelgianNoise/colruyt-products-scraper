@@ -196,7 +196,7 @@ func doQuery() (results []queryResult, err error) {
 				price.quantity_price,
 				price.quantity_price_quantity,
 				(100 - (CASE
-						WHEN promo.benefit IS NULL -- 0%
+						WHEN promo.benefit IS NULL OR promo.benefit = '' -- 0%
 						THEN 0::text
 						WHEN SPLIT_PART(promo.benefit, ',', 2) != ''
 						THEN SPLIT_PART(SPLIT_PART(promo.benefit, ',', 2), '_', 1)
