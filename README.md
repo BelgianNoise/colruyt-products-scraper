@@ -1,6 +1,6 @@
 # colruyt-products-scraper
 
-An application written in Go that scrapes Colruyt's API to retrieve all product listings.
+An application written in Go that scrapes Colruyt's API to retrieve all product listings. 
 
 Data is scraped every night using a cronjob running in Github Actions and uploaded to a public Google Cloud Storage bucket, named `colruyt-products` and hosted in `us-east1`, for everyone to use (and for easier acccess for me later).
 To overcome rate limiting and other surprisingly weird API behaviour I am using private and publicly available online proxies.
