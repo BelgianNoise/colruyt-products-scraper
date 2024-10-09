@@ -170,7 +170,6 @@ func GetAllProductsWithParams(
 		return []shared.Product{}, err
 	}
 	fmt.Println("API key retrieved: " + APIKey)
-	os.Exit(0)
 
 	percentageRequired := percentageRequiredOutOf100 / 100.0
 
