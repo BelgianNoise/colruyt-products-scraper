@@ -7,13 +7,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	shared "shared/pkg"
 	"sync"
-	"time"
-
-	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
-	"github.com/go-rod/stealth"
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
@@ -115,7 +111,7 @@ func GetAllProducts() (
 	return GetAllProductsWithParams(100.0, 20, 250, useProxies)
 }
 
-// Retrieve a valid X-CG-APIKey from the xframe.js script.
+// Retrieve a valid X-CG-APIKey.
 // Not providing this header will result in a 401.
 func GetXCGAPIKey() (XCGAPIKey string, err error) {
 	// if the token is in the env variables, return it
@@ -123,84 +119,39 @@ func GetXCGAPIKey() (XCGAPIKey string, err error) {
 		return e, nil
 	}
 
-	var browser *rod.Browser
-	var l *launcher.Launcher
-	if os.Getenv("HEADLESS") == "false" {
-		println("====== starting browser")
-
-		// Headless runs the browser on foreground, you can also use flag "-rod=show"
-		// Devtools opens the tab in each new tab opened automatically
-		l = launcher.New().
-			Headless(false).
-			Devtools(true)
-
-		defer l.Cleanup()
-
-		url := l.MustLaunch()
-
-		// Trace shows verbose debug information for each action executed
-		// SlowMotion is a debug related function that waits 2 seconds between
-		// each action, making it easier to inspect what your code is doing.
-		browser = rod.New().
-			ControlURL(url).
-			Trace(true).
-			SlowMotion(2 * time.Second).
-			MustConnect()
-
-		// ServeMonitor plays screenshots of each tab. This feature is extremely
-		// useful when debugging with headless mode.
-		// You can also enable it with flag "-rod=monitor"
-		launcher.Open(browser.ServeMonitor(""))
-
-		println("====== browser started")
-	} else {
-		browser = rod.New().SlowMotion(2 * time.Second).MustConnect()
+	// fetch https://www.colruyt.be/content/clp/nl.model.json
+	// and extract the X-CG-APIKey from the response body
+	request, requestErr := http.NewRequest("GET", "https://www.colruyt.be/content/clp/nl.model.json", nil)
+	if requestErr != nil {
+		return "", requestErr
 	}
-	defer browser.MustClose()
+	request.Header.Set("User-Agent", userAgent)
 
-	page := stealth.MustPage(browser)
-	// page := browser.MustPage("")
-	router := page.HijackRequests()
-	apikey := ""
-
-	routeHandler := func(ctx *rod.Hijack) {
-		// Get the value of the X-CG-APIKey header
-		a := ctx.Request.Header("X-CG-APIKey")
-		if a != "" && a != "<nil>" {
-			fmt.Printf("API key %q found on URL %q \n", a, ctx.Request.URL().String())
-			apikey = a
-		} else {
-			fmt.Printf("No API key found on URL %q \n", ctx.Request.URL().String())
-		}
-		// Continue the request
-		ctx.MustLoadResponse()
+	response, responseErr := http.DefaultClient.Do(request)
+	if responseErr != nil {
+		return "", responseErr
 	}
-	router.MustAdd("*apix.colruytgroup.com*", routeHandler)
-	router.MustAdd("*apip.colruytgroup.com*", routeHandler)
+	defer response.Body.Close()
 
-	go router.Run()
-
-	page.MustNavigate("https://colruyt.be/nl")
-	// wait for page to load
-	page.MustWaitLoad()
-	page.MustWaitRequestIdle()
-
-	loopsToGo := 18
-	for {
-		// wait for 3 seconds
-		time.Sleep(5 * time.Second)
-		loopsToGo--
-		if loopsToGo == 0 {
-			break
-		}
-		if apikey != "" {
-			return apikey, nil
-		} else {
-			fmt.Println("Still waiting for API key...")
-		}
+	body, bodyErr := io.ReadAll(response.Body)
+	if bodyErr != nil {
+		return "", bodyErr
 	}
 
-	return "", fmt.Errorf("no API key found after 90 seconds")
+	// Look for a string: '"X-CG-APIKey: a8ylmv13-b285-4788-9e14-0f79b7ed2411"'
+	// and extract the key using regex
+	bodyString := string(body)
+	// Compile the regex pattern
+	re := regexp.MustCompile(`"X-CG-APIKey: ([a-zA-Z0-9-]+)"`)
+
+	// Find the match
+	match := re.FindStringSubmatch(bodyString)
+	if len(match) < 2 {
+		return "", fmt.Errorf("API key not found")
+	}
+	apiKey := match[1]
+
+	return apiKey, nil
 }
 
 func GetAllProductsWithParams(
@@ -219,6 +170,7 @@ func GetAllProductsWithParams(
 		return []shared.Product{}, err
 	}
 	fmt.Println("API key retrieved: " + APIKey)
+	os.Exit(0)
 
 	percentageRequired := percentageRequiredOutOf100 / 100.0
 
