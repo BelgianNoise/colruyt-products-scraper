@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	shared "shared/pkg"
 	"sort"
 	"time"
@@ -167,16 +165,11 @@ type docObject struct {
 }
 
 func doQuery() (results []queryResult, err error) {
-	connectionString := fmt.Sprintf(
-		"postgres://%s?sslmode=disable",
-		os.Getenv("DB_CONNECTION_STRING"),
-	)
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		return
+	db, dbError := shared.CreateDBInstance()
+	if dbError != nil {
+		return []queryResult{}, dbError
 	}
 	defer db.Close()
-	db.SetMaxOpenConns(5)
 
 	println("Executing query...")
 
