@@ -47,7 +47,11 @@ func GenerateInsertPromotionsQuery(
 	}
 
 	query += strings.Join(values, ",")
-	query += ` ON CONFLICT DO NOTHING`
+	query += ` ON CONFLICT (promotion_id) DO UPDATE SET (
+		` + strings.Join(shared.PromotionColumns, ",") + `
+	) = (
+		EXCLUDED.` + strings.Join(shared.PromotionColumns, ",EXCLUDED.") + `
+	)`
 
 	return query
 }
