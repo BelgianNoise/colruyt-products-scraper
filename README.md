@@ -10,3 +10,4 @@ I wanted to create this because I find it very interesting to know which product
 All data is also stored in a PostgreSQL database. This one is however not publicly available (for now) because of possible cost implications.
 
 A frontend to display all the data can be found at: https://colruyt-prijzen.nasaj.be/ - source: https://github.com/BelgianNoise/colruyt-price-history
+ 
