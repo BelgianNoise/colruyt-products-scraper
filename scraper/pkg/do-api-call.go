@@ -57,7 +57,8 @@ func DoAPICall(
 	if useProxy {
 		response, responseErr = shared.UseProxy(request)
 	} else {
-		response, responseErr = http.DefaultClient.Do(request)
+		client := &http.Client{Timeout: 20 * time.Second}
+		response, responseErr = client.Do(request)
 	}
 	if responseErr != nil {
 		fmt.Println(responseErr.Error())
