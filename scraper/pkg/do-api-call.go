@@ -10,6 +10,7 @@ import (
 	"regexp"
 	shared "shared/pkg"
 	"sync"
+	"time"
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
@@ -23,6 +24,8 @@ func DoAPICall(
 	responseObject APIResponse,
 	err error,
 ) {
+
+	var startTimeOfCall = time.Now()
 
 	requestUrl, urlErr := url.ParseRequestURI(ColruytAPIEndpoint)
 	if urlErr != nil {
@@ -78,7 +81,9 @@ func DoAPICall(
 		return retry(page, size, useProxy, XCGAPIKey)
 	}
 
-	fmt.Printf("[%d] Call successfull\n", page)
+	var elapsed = time.Since(startTimeOfCall)
+	var networkBandwidth = float64(len(body) / 1024)
+	fmt.Printf("[%d] Call successful (elapsed: %d ms | network bandwidth: %.2f KB)\n", page, elapsed.Milliseconds(), networkBandwidth)
 
 	return apiResponse, nil
 }
