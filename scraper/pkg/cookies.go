@@ -2,6 +2,8 @@ package scraper
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -13,6 +15,33 @@ import (
 var cookies []*proto.NetworkCookie = []*proto.NetworkCookie{}
 
 func LoadCookies() {
+	var url = "https://apix.colruyt.be/gateway/ictmgmt.emarkecom.cgplacesretrsvcv4/v4/nl/places/getDetails?placeId=605"
+	response, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		panic(fmt.Sprintf("Failed to get cookies: %s", response.Status))
+	}
+	// log response body
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Response: %s\n", body)
+
+	for _, cookie := range cookies {
+		cookies = append(cookies, &proto.NetworkCookie{
+			Name:  cookie.Name,
+			Value: cookie.Value,
+		})
+		fmt.Printf("Cookie Set: %s=%s\n", cookie.Name, cookie.Value)
+	}
+	fmt.Printf("====== cookies loaded")
+}
+
+func LoadCookiesUsingBrowser() {
 	var browser *rod.Browser
 	var l *launcher.Launcher
 
