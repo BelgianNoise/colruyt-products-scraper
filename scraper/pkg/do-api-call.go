@@ -11,6 +11,8 @@ import (
 	shared "shared/pkg"
 	"sync"
 	"time"
+
+	"github.com/go-rod/rod/lib/proto"
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
@@ -47,6 +49,14 @@ func DoAPICall(
 	request.Header.Set("User-Agent", userAgent)
 	request.Header.Set("X-Cg-Apikey", XCGAPIKey)
 
+	// Add all cookies to the request
+	for _, cookie := range cookies {
+		request.AddCookie(&http.Cookie{
+			Name:  cookie.Name,
+			Value: cookie.Value,
+		})
+	}
+
 	if page == 1 && size == 1 {
 		fmt.Println("- Doing initial API call")
 	}
@@ -57,7 +67,7 @@ func DoAPICall(
 	if useProxy {
 		response, responseErr = shared.UseProxy(request)
 	} else {
-		client := &http.Client{Timeout: 20 * time.Second}
+		client := &http.Client{Timeout: 10 * time.Second}
 		response, responseErr = client.Do(request)
 	}
 	if responseErr != nil {
@@ -66,9 +76,18 @@ func DoAPICall(
 	}
 	defer response.Body.Close()
 
-	// fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
 	if response.StatusCode != 200 {
+		fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
 		return retry(page, size, useProxy, XCGAPIKey)
+	}
+
+	// save all cookies from the response to the global cookies variable
+	for _, cookie := range response.Cookies() {
+		fmt.Printf("Set Cookie: %s=%s\n", cookie.Name, cookie.Value)
+		cookies = append(cookies, &proto.NetworkCookie{
+			Name:  cookie.Name,
+			Value: cookie.Value,
+		})
 	}
 
 	body, bodyErr := io.ReadAll(response.Body)

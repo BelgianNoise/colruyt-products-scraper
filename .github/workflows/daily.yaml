@@ -3,11 +3,10 @@ name: Daily Run
 on:
   workflow_dispatch:
   schedule:
-    # RUN DAILY AT 09:00 UTC
+    # RUN DAILY AT 08:00 UTC
     - cron: '0 8 * * *'
 
 jobs:
-
   Scraper:
     uses: ./.github/workflows/scraper.yaml
     secrets: inherit

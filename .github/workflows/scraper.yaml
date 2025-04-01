@@ -5,7 +5,6 @@ on:
   workflow_call:
 
 jobs:
-
   Scraper:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -23,7 +22,6 @@ jobs:
       - run: 'echo "PRIVATE_PROXY_PASSWORD=${{ secrets.PRIVATE_PROXY_PASSWORD }}" >> .env'
       - run: 'echo "COLRUYT_API_ENDPOINT_PRODUCTS=${{ secrets.COLRUYT_API_ENDPOINT_PRODUCTS }}" >> .env'
       - run: 'echo "COLRUYT_API_ENDPOINT_PROMOTIONS=${{ secrets.COLRUYT_API_ENDPOINT_PROMOTIONS }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_HOST=${{ secrets.COLRUYT_API_ENDPOINT_HOST }}" >> .env'
       - run: 'echo "COLRUYT_PLACE_ID=${{ secrets.COLRUYT_PLACE_ID }}" >> .env'
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec

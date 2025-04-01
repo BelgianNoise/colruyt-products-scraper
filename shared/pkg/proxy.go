@@ -73,7 +73,7 @@ func UseProxy(
 	}
 
 	client := &http.Client{
-		Timeout: 20 * time.Second,
+		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(proxyUrl),
 		},
