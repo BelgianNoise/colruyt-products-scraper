@@ -5,7 +5,6 @@ on:
   workflow_call:
 
 jobs:
-
   Scraper:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -13,17 +12,26 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
-      # Not the best way to handle these secrets lol
       - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
-      - run: 'echo "X_CG_APIKEY=${{ secrets.X_CG_APIKEY }}" >> .env'
-      - run: 'echo "USE_PROXY=${{ secrets.USE_PROXY }}" >> .env'
-      - run: 'echo "USE_PRIVATE_PROXY=${{ secrets.USE_PRIVATE_PROXY }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_HOST=${{ secrets.PRIVATE_PROXY_HOST }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_USERNAME=${{ secrets.PRIVATE_PROXY_USERNAME }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_PASSWORD=${{ secrets.PRIVATE_PROXY_PASSWORD }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_PRODUCTS=${{ secrets.COLRUYT_API_ENDPOINT_PRODUCTS }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_PROMOTIONS=${{ secrets.COLRUYT_API_ENDPOINT_PROMOTIONS }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_HOST=${{ secrets.COLRUYT_API_ENDPOINT_HOST }}" >> .env'
-      - run: 'echo "COLRUYT_PLACE_ID=${{ secrets.COLRUYT_PLACE_ID }}" >> .env'
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec
+        env:
+          HEADLESS: ${{ vars.HEADLESS }}
+          X_CG_APIKEY: ${{ vars.X_CG_APIKEY }}
+          COLRUYT_API_ENDPOINT_PRODUCTS: ${{ vars.COLRUYT_API_ENDPOINT_PRODUCTS }}
+          COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ vars.COLRUYT_API_ENDPOINT_PROMOTIONS }}
+          COLRUYT_PLACE_ID: ${{ vars.COLRUYT_PLACE_ID }}
+          USE_PROXY: ${{ vars.USE_PROXY }}
+          USE_PRIVATE_PROXY: ${{ vars.USE_PRIVATE_PROXY }}
+          PRIVATE_PROXY_HOST: ${{ secrets.PRIVATE_PROXY_HOST }}
+          PRIVATE_PROXY_USERNAME: ${{ secrets.PRIVATE_PROXY_USERNAME }}
+          PRIVATE_PROXY_PASSWORD: ${{ secrets.PRIVATE_PROXY_PASSWORD }}
+      - name: Upload screenshot if scraper failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: |
+            *.png
+            language-select-button-not-found.png
+          if-no-files-found: ignore
