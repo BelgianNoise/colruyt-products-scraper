@@ -28,9 +28,9 @@ jobs:
           PRIVATE_PROXY_PASSWORD: ${{ secrets.PRIVATE_PROXY_PASSWORD }}
       - name: Upload screenshot if scraper failed
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: failure-screenshots
+          name: browser-screenshots
           path: |
             *.png
             language-select-button-not-found.png
