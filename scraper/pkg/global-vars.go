@@ -34,7 +34,7 @@ func InitVariables() {
 	}
 
 	HeadlessEnvVar := os.Getenv("HEADLESS")
-	if HeadlessEnvVar == "" {
+	if HeadlessEnvVar == "" || HeadlessEnvVar == "true" {
 		fmt.Printf("Using default headless mode: %v\n", Headless)
 	} else {
 		if HeadlessEnvVar == "false" {
