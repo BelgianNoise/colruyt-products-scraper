@@ -11,8 +11,6 @@ import (
 	shared "shared/pkg"
 	"sync"
 	"time"
-
-	"github.com/go-rod/rod/lib/proto"
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
@@ -82,13 +80,13 @@ func DoAPICall(
 	}
 
 	// save all cookies from the response to the global cookies variable
-	for _, cookie := range response.Cookies() {
-		fmt.Printf("Set Cookie: %s=%s\n", cookie.Name, cookie.Value)
-		cookies = append(cookies, &proto.NetworkCookie{
-			Name:  cookie.Name,
-			Value: cookie.Value,
-		})
-	}
+	// for _, cookie := range response.Cookies() {
+	// 	fmt.Printf("Set Cookie: %s=%s\n", cookie.Name, cookie.Value)
+	// 	cookies = append(cookies, &proto.NetworkCookie{
+	// 		Name:  cookie.Name,
+	// 		Value: cookie.Value,
+	// 	})
+	// }
 
 	body, bodyErr := io.ReadAll(response.Body)
 	if bodyErr != nil {

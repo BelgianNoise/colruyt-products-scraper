@@ -12,6 +12,6 @@ func main() {
 		panic(err)
 	}
 	scraper.InitVariables()
-	scraper.LoadCookies()
+	// scraper.LoadCookies()
 	scraper.Scrape()
 }
