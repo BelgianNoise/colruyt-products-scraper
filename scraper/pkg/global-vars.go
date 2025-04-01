@@ -10,6 +10,8 @@ var ColruytPlaceID = ""
 var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgproductretrsvc.v2/v2/v2/nl/products"
 var ColruytPromotionAPIEndpoint = "https://ecgpromotionmw.colruyt.be/ecgpromotionmw/v2/nl/promotion/"
 
+var Headless = true
+
 func InitVariables() {
 	ColruytAPIEndpointEnvVar := os.Getenv("COLRUYT_API_ENDPOINT_PRODUCTS")
 	if ColruytAPIEndpointEnvVar == "" {
@@ -31,4 +33,13 @@ func InitVariables() {
 		panic("Missing environment variable COLRUYT_PLACE_ID")
 	}
 
+	HeadlessEnvVar := os.Getenv("HEADLESS")
+	if HeadlessEnvVar == "" {
+		fmt.Printf("Using default headless mode: %v\n", Headless)
+	} else {
+		if HeadlessEnvVar == "false" {
+			Headless = false
+		}
+		fmt.Printf("Using headless mode from environment variable: %v\n", Headless)
+	}
 }

@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -12,18 +11,17 @@ import (
 )
 
 var cookies []*proto.NetworkCookie = []*proto.NetworkCookie{}
-var headless = os.Getenv("HEADLESS") == "true"
 
 func LoadCookies() {
 	var browser *rod.Browser
 	var l *launcher.Launcher
-	if os.Getenv("HEADLESS") == "false" {
+	if !Headless {
 		fmt.Printf("====== starting browser")
 
 		// Headless runs the browser on foreground, you can also use flag "-rod=show"
 		// Devtools opens the tab in each new tab opened automatically
 		l = launcher.New().
-			Headless(headless).
+			Headless(false).
 			Devtools(true)
 
 		defer l.Cleanup()

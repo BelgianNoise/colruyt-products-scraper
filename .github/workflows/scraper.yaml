@@ -16,6 +16,7 @@ jobs:
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec
         env:
+          HEADLESS: ${{ vars.HEADLESS }}
           X_CG_APIKEY: ${{ vars.X_CG_APIKEY }}
           COLRUYT_API_ENDPOINT_PRODUCTS: ${{ vars.COLRUYT_API_ENDPOINT_PRODUCTS }}
           COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ vars.COLRUYT_API_ENDPOINT_PROMOTIONS }}
