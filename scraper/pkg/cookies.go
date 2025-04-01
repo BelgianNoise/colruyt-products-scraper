@@ -20,7 +20,8 @@ func LoadCookies() {
 
 	l = launcher.New().
 		Headless(Headless).
-		Devtools(!Headless)
+		Devtools(!Headless).
+		NoSandbox(Headless)
 	defer l.Cleanup()
 	url := l.MustLaunch()
 
