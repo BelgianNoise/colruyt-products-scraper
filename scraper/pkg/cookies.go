@@ -41,15 +41,18 @@ func LoadCookies() {
 	page := stealth.MustPage(browser)
 	page.MustNavigate("https://colruyt.be")
 
-	// check if the page contains an element with class "language-select-button"
-	// if it not visible within 30 seconds, take a screenshot
-	// if it does, click on it
-	el := page.Timeout(30 * time.Second).MustElement(".language-select-button")
-	if el == nil {
-		fmt.Printf("====== language-select-button not found, taking screenshot")
-		page.MustScreenshot("language-select-button-not-found.png")
-		panic("language-select-button not found")
-	}
+	var el *rod.Element
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("====== language-select-button not found, taking screenshot: %v\n", r)
+				page.MustScreenshot("language-select-button-not-found.png")
+				panic(r)
+			}
+		}()
+		el = page.Timeout(30 * time.Second).MustElement(".language-select-button")
+	}()
+
 	el.MustClick()
 
 	// Extract cookies from the page
