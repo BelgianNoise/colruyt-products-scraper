@@ -16,12 +16,12 @@ jobs:
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec
         env:
-          X_CG_APIKEY: ${{ env.X_CG_APIKEY }}
-          COLRUYT_API_ENDPOINT_PRODUCTS: ${{ env.COLRUYT_API_ENDPOINT_PRODUCTS }}
-          COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ env.COLRUYT_API_ENDPOINT_PROMOTIONS }}
-          COLRUYT_PLACE_ID: ${{ env.COLRUYT_PLACE_ID }}
-          USE_PROXY: ${{ env.USE_PROXY }}
-          USE_PRIVATE_PROXY: ${{ env.USE_PRIVATE_PROXY }}
+          X_CG_APIKEY: ${{ vars.X_CG_APIKEY }}
+          COLRUYT_API_ENDPOINT_PRODUCTS: ${{ vars.COLRUYT_API_ENDPOINT_PRODUCTS }}
+          COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ vars.COLRUYT_API_ENDPOINT_PROMOTIONS }}
+          COLRUYT_PLACE_ID: ${{ vars.COLRUYT_PLACE_ID }}
+          USE_PROXY: ${{ vars.USE_PROXY }}
+          USE_PRIVATE_PROXY: ${{ vars.USE_PRIVATE_PROXY }}
           PRIVATE_PROXY_HOST: ${{ secrets.PRIVATE_PROXY_HOST }}
           PRIVATE_PROXY_USERNAME: ${{ secrets.PRIVATE_PROXY_USERNAME }}
           PRIVATE_PROXY_PASSWORD: ${{ secrets.PRIVATE_PROXY_PASSWORD }}
