@@ -26,3 +26,12 @@ jobs:
           PRIVATE_PROXY_HOST: ${{ secrets.PRIVATE_PROXY_HOST }}
           PRIVATE_PROXY_USERNAME: ${{ secrets.PRIVATE_PROXY_USERNAME }}
           PRIVATE_PROXY_PASSWORD: ${{ secrets.PRIVATE_PROXY_PASSWORD }}
+      - name: Upload screenshot if scraper failed
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: failure-screenshots
+          path: |
+            *.png
+            language-select-button-not-found.png
+          if-no-files-found: ignore

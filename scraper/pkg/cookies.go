@@ -42,10 +42,15 @@ func LoadCookies() {
 	page.MustNavigate("https://colruyt.be")
 
 	// check if the page contains an element with class "language-select-button"
+	// if it not visible within 30 seconds, take a screenshot
 	// if it does, click on it
-	if page.MustElement(".language-select-button").MustVisible() {
-		page.MustElement(".language-select-button").MustClick()
+	el := page.Timeout(30 * time.Second).MustElement("button.language-select-button")
+	if el == nil {
+		fmt.Printf("====== language-select-button not found, taking screenshot")
+		page.MustScreenshot("language-select-button-not-found.png")
+		panic("language-select-button not found")
 	}
+	el.MustClick()
 
 	// Extract cookies from the page
 	cookies = page.MustCookies()
