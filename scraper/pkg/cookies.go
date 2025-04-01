@@ -44,7 +44,7 @@ func LoadCookies() {
 	// check if the page contains an element with class "language-select-button"
 	// if it not visible within 30 seconds, take a screenshot
 	// if it does, click on it
-	el := page.Timeout(30 * time.Second).MustElement("button.language-select-button")
+	el := page.Timeout(30 * time.Second).MustElement(".language-select-button")
 	if el == nil {
 		fmt.Printf("====== language-select-button not found, taking screenshot")
 		page.MustScreenshot("language-select-button-not-found.png")
