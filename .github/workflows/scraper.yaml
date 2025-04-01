@@ -12,16 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: 'echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > key.json'
-      # Not the best way to handle these secrets lol
       - run: 'echo "GOOGLE_APPLICATION_CREDENTIALS=\"key.json\"" >> .env'
-      - run: 'echo "X_CG_APIKEY=${{ secrets.X_CG_APIKEY }}" >> .env'
-      - run: 'echo "USE_PROXY=${{ secrets.USE_PROXY }}" >> .env'
-      - run: 'echo "USE_PRIVATE_PROXY=${{ secrets.USE_PRIVATE_PROXY }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_HOST=${{ secrets.PRIVATE_PROXY_HOST }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_USERNAME=${{ secrets.PRIVATE_PROXY_USERNAME }}" >> .env'
-      - run: 'echo "PRIVATE_PROXY_PASSWORD=${{ secrets.PRIVATE_PROXY_PASSWORD }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_PRODUCTS=${{ secrets.COLRUYT_API_ENDPOINT_PRODUCTS }}" >> .env'
-      - run: 'echo "COLRUYT_API_ENDPOINT_PROMOTIONS=${{ secrets.COLRUYT_API_ENDPOINT_PROMOTIONS }}" >> .env'
-      - run: 'echo "COLRUYT_PLACE_ID=${{ secrets.COLRUYT_PLACE_ID }}" >> .env'
       - run: go build -o scraper-exec ./scraper
       - run: ./scraper-exec
+        env:
+          X_CG_APIKEY: ${{ env.X_CG_APIKEY }}
+          COLRUYT_API_ENDPOINT_PRODUCTS: ${{ env.COLRUYT_API_ENDPOINT_PRODUCTS }}
+          COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ env.COLRUYT_API_ENDPOINT_PROMOTIONS }}
+          COLRUYT_PLACE_ID: ${{ env.COLRUYT_PLACE_ID }}
+          USE_PROXY: ${{ env.USE_PROXY }}
+          USE_PRIVATE_PROXY: ${{ env.USE_PRIVATE_PROXY }}
+          PRIVATE_PROXY_HOST: ${{ secrets.PRIVATE_PROXY_HOST }}
+          PRIVATE_PROXY_USERNAME: ${{ secrets.PRIVATE_PROXY_USERNAME }}
+          PRIVATE_PROXY_PASSWORD: ${{ secrets.PRIVATE_PROXY_PASSWORD }}
