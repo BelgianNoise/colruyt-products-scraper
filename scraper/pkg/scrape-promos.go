@@ -63,6 +63,10 @@ func GetAllPromotions(
 	return promotions, nil
 }
 
+type PromotionResponse struct {
+	Promotion []shared.Promotion `json:"promotion"`
+}
+
 func getOnePromotionHelper(
 	promotionID string,
 	useProxy bool,
@@ -78,7 +82,7 @@ func getOnePromotionHelper(
 	queryParams := requestUrl.Query()
 	queryParams.Set("clientCode", "CLP")
 	queryParams.Set("placeId", ColruytPlaceID)
-	queryParams.Set("promotionId", promotionID)
+	queryParams.Set("promotionIds", promotionID)
 	requestUrl.RawQuery = queryParams.Encode()
 
 	request, requestErr := http.NewRequest("GET", requestUrl.String(), nil)
@@ -107,15 +111,15 @@ func getOnePromotionHelper(
 		return promotion, err
 	}
 
-	var apiResponse shared.Promotion
+	var apiResponse PromotionResponse
 	err = json.Unmarshal(bodyBytes, &apiResponse)
 	if err != nil {
 		return promotion, err
 	}
-	if apiResponse.PromotionID == "" {
+	if len(apiResponse.Promotion) == 0 {
 		return promotion, fmt.Errorf("no promotion found for id %q", promotionID)
 	}
-	return apiResponse, nil
+	return apiResponse.Promotion[0], nil
 }
 
 // Using tryCount like this only works if we are not running in goroutines.

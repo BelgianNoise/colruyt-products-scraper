@@ -19,6 +19,7 @@ func LoadCookies() {
 	fmt.Printf("====== starting browser")
 
 	l = launcher.New().
+		Leakless(false).
 		Headless(Headless).
 		Devtools(!Headless).
 		NoSandbox(Headless)

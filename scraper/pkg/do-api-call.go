@@ -46,6 +46,19 @@ func DoAPICall(
 
 	request.Header.Set("User-Agent", userAgent)
 	request.Header.Set("X-Cg-Apikey", XCGAPIKey)
+	// request.Header.Set("Host", "apip.colruyt.be")
+	// request.Header.Set("Origin", "https://www.colruyt.be")
+	// request.Header.Set("priority", "u=1,i")
+	// request.Header.Set("referer", "https://www.colruyt.be/")
+	// request.Header.Set("sec-ch-ua", `"Not A(Brand";v="8", "Chromium";v="132", "Opera GX";v="117"`)
+	// request.Header.Set("sec-ch-ua-mobile", "?0")
+	// request.Header.Set("sec-ch-ua-platform", `"Windows"`)
+	// request.Header.Set("sec-fetch-dest", "empty")
+	// request.Header.Set("sec-fetch-mode", "cors")
+	// request.Header.Set("sec-fetch-site", "same-site")
+	// request.Header.Set("accept", "*/*")
+	// request.Header.Set("accept-encoding", "gzip, deflate, br, zstd")
+	// request.Header.Set("accept-language", "en")
 
 	// Add all cookies to the request
 	for _, cookie := range cookies {

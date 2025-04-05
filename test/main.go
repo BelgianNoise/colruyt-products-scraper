@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	scraper "scraper/pkg"
+	shared "shared/pkg"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -13,9 +14,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	// scraper.LoadCookies()
+	shared.InitProxyVars()
 	scraper.InitVariables()
 
-	products, err := scraper.GetAllProductsWithParams(30.0, 2, 250, true)
+	products, err := scraper.GetAllProductsWithParams(30.0, 2, 250, false)
 	if err != nil {
 		panic(err)
 	}

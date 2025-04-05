@@ -8,7 +8,7 @@ import (
 var ColruytPlaceID = ""
 
 var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgproductretrsvc.v2/v2/v2/nl/products"
-var ColruytPromotionAPIEndpoint = "https://ecgpromotionmw.colruyt.be/ecgpromotionmw/v2/nl/promotion/"
+var ColruytPromotionAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.promotionretrsvc.v1/v1/v1/nl/promotion"
 
 var Headless = true
 

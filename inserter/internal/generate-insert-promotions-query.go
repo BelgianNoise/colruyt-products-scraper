@@ -24,7 +24,7 @@ func GenerateInsertPromotionsQuery(
 		}
 		benefit = strings.TrimSuffix(benefit, ",")
 		for _, p := range promotion.LinkedProducts {
-			linkedProducts += p.TechnicalArticleNumber + ","
+			linkedProducts += fmt.Sprintf("%d", p) + ","
 		}
 		linkedProducts = strings.TrimSuffix(linkedProducts, ",")
 
@@ -36,7 +36,7 @@ func GenerateInsertPromotionsQuery(
 			'` + linkedProducts + `',
 			'` + promotion.CommercialPromotionID + `',
 			'` + promotion.FolderID + `',
-			'` + promotion.MaxTimes + `',
+			'` + fmt.Sprintf("%d", promotion.MaxTimes) + `',
 			'` + strconv.FormatBool(promotion.Personalised) + `',
 			'` + promotion.PromotionKind + `',
 			'` + promotion.PromotionType + `',
