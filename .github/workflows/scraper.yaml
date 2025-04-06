@@ -17,6 +17,8 @@ jobs:
       - run: ./scraper-exec
         env:
           HEADLESS: ${{ vars.HEADLESS }}
+          IGNORE_COOKIES: ${{ vars.IGNORE_COOKIES }}
+          CONCURRENCY_LIMIT: ${{ vars.CONCURRENCY_LIMIT }}
           X_CG_APIKEY: ${{ vars.X_CG_APIKEY }}
           COLRUYT_API_ENDPOINT_PRODUCTS: ${{ vars.COLRUYT_API_ENDPOINT_PRODUCTS }}
           COLRUYT_API_ENDPOINT_PROMOTIONS: ${{ vars.COLRUYT_API_ENDPOINT_PROMOTIONS }}
