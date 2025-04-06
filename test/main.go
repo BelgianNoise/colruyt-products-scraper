@@ -14,9 +14,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// scraper.LoadCookies()
-	shared.InitProxyVars()
 	scraper.InitVariables()
+	scraper.LoadCookies()
+	shared.InitProxyVars()
 
 	products, err := scraper.GetAllProductsWithParams(30.0, 2, 250, false)
 	if err != nil {

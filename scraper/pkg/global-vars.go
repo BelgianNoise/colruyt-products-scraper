@@ -11,6 +11,7 @@ var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgpr
 var ColruytPromotionAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.promotionretrsvc.v1/v1/v1/nl/promotion"
 
 var Headless = true
+var ignoreCookies = false
 
 func InitVariables() {
 	ColruytAPIEndpointEnvVar := os.Getenv("COLRUYT_API_ENDPOINT_PRODUCTS")
@@ -41,5 +42,15 @@ func InitVariables() {
 			Headless = false
 		}
 		fmt.Printf("Using headless mode from environment variable: %v\n", Headless)
+	}
+
+	ignoreCookiesEnvVar := os.Getenv("IGNORE_COOKIES")
+	if ignoreCookiesEnvVar == "" || ignoreCookiesEnvVar == "false" {
+		fmt.Printf("Using default ignore cookies: %v\n", ignoreCookies)
+	} else {
+		if ignoreCookiesEnvVar == "true" {
+			ignoreCookies = true
+		}
+		fmt.Printf("Using ignore cookies from environment variable: %v\n", ignoreCookies)
 	}
 }
