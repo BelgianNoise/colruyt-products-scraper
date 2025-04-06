@@ -13,7 +13,7 @@ import (
 var cookies []*proto.NetworkCookie = []*proto.NetworkCookie{}
 
 func LoadCookies() {
-	if ignoreCookies {
+	if IgnoreCookies {
 		fmt.Printf("====== cookies loading skipped because of env variable\n")
 		return
 	}

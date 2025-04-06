@@ -11,7 +11,9 @@ var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgpr
 var ColruytPromotionAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.promotionretrsvc.v1/v1/v1/nl/promotion"
 
 var Headless = true
-var ignoreCookies = false
+var IgnoreCookies = false
+
+var GlobalConcurrenctLimit = 10
 
 func InitVariables() {
 	ColruytAPIEndpointEnvVar := os.Getenv("COLRUYT_API_ENDPOINT_PRODUCTS")
@@ -46,11 +48,19 @@ func InitVariables() {
 
 	ignoreCookiesEnvVar := os.Getenv("IGNORE_COOKIES")
 	if ignoreCookiesEnvVar == "" || ignoreCookiesEnvVar == "false" {
-		fmt.Printf("Using default ignore cookies: %v\n", ignoreCookies)
+		fmt.Printf("Using default ignore cookies: %v\n", IgnoreCookies)
 	} else {
 		if ignoreCookiesEnvVar == "true" {
-			ignoreCookies = true
+			IgnoreCookies = true
 		}
-		fmt.Printf("Using ignore cookies from environment variable: %v\n", ignoreCookies)
+		fmt.Printf("Using ignore cookies from environment variable: %v\n", IgnoreCookies)
+	}
+
+	concurrencyLimitEnvVar := os.Getenv("CONCURRENCY_LIMIT")
+	if concurrencyLimitEnvVar == "" {
+		fmt.Printf("Using default concurrency limit: %v\n", GlobalConcurrenctLimit)
+	} else {
+		fmt.Printf("Using concurrency limit from environment variable: %s\n", concurrencyLimitEnvVar)
+		GlobalConcurrenctLimit = int(concurrencyLimitEnvVar[0])
 	}
 }

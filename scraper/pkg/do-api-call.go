@@ -16,7 +16,6 @@ import (
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
-var globalConcurrencyLimit int = 1
 var concurrencyLimiter chan int
 var waitIsReloadingCookies = make(chan bool, 1)
 
@@ -168,7 +167,7 @@ func GetAllProducts() (
 	if os.Getenv("USE_PROXY") == "true" {
 		useProxies = true
 	}
-	return GetAllProductsWithParams(100.0, 20, 250, useProxies)
+	return GetAllProductsWithParams(100.0, GlobalConcurrenctLimit, 250, useProxies)
 }
 
 // Retrieve a valid X-CG-APIKey.
@@ -242,11 +241,8 @@ func GetAllProductsWithParams(
 
 	pages := initResp.ProductsFound/pageSize + 1
 
-	globalConcurrencyLimit = concurrencyLimit
-	concurrencyLimiter = make(chan int, globalConcurrencyLimit)
+	concurrencyLimiter = make(chan int, concurrencyLimit)
 
-	// limiter := make(chan int, concurrencyLimit)
-	// defer close(limiter)
 	wg := sync.WaitGroup{}
 
 	productsMutex := sync.Mutex{}
