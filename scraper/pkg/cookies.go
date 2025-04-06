@@ -13,17 +13,38 @@ import (
 var cookies []*proto.NetworkCookie = []*proto.NetworkCookie{}
 
 func LoadCookies() {
+	if ignoreCookies {
+		fmt.Printf("====== cookies loading skipped because of env variable\n")
+		return
+	}
+
+	l, browser := launchBrowser()
+	defer l.Cleanup()
+	defer browser.MustClose()
+
+	page := stealth.MustPage(browser)
+	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: userAgent,
+	})
+
+	page.MustNavigate("https://colruyt.be/nl/producten")
+	// built in Wait load functions dont work reliably
+	time.Sleep(10 * time.Second)
+
+	cookies = extractCookiesFromPage(page)
+}
+
+func launchBrowser() (*launcher.Launcher, *rod.Browser) {
 	var browser *rod.Browser
 	var l *launcher.Launcher
 
-	fmt.Printf("====== starting browser")
+	fmt.Printf("====== starting browser (headless: %v)\n", Headless)
 
 	l = launcher.New().
 		Leakless(false).
 		Headless(Headless).
 		Devtools(!Headless).
 		NoSandbox(Headless)
-	defer l.Cleanup()
 	url := l.MustLaunch()
 
 	browser = rod.New().
@@ -31,34 +52,17 @@ func LoadCookies() {
 		Trace(true). // Trace shows verbose debug information for each action executed
 		SlowMotion(1 * time.Second).
 		MustConnect()
-	defer browser.MustClose()
-
-	if !Headless {
-		launcher.Open(browser.ServeMonitor(""))
-	}
 
 	fmt.Printf("====== browser started")
 
-	page := stealth.MustPage(browser)
-	page.MustNavigate("https://colruyt.be")
+	return l, browser
+}
 
-	var el *rod.Element
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("====== language-select-button not found, taking screenshot: %v\n", r)
-				page.MustScreenshot("language-select-button-not-found.png")
-				panic(r)
-			}
-		}()
-		el = page.Timeout(30 * time.Second).MustElement(".language-select-button")
-	}()
-
-	el.MustClick()
-
+func extractCookiesFromPage(page *rod.Page) []*proto.NetworkCookie {
 	// Extract cookies from the page
-	cookies = page.MustCookies()
+	cookies := page.MustCookies()
 	for _, cookie := range cookies {
 		fmt.Printf("Cookie: %s=%s\n", cookie.Name, cookie.Value)
 	}
+	return cookies
 }
