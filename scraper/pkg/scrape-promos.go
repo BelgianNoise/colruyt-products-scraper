@@ -93,6 +93,14 @@ func getOnePromotionHelper(
 	request.Header.Set("User-Agent", userAgent)
 	request.Header.Set("X-CG-APIKey", XCGAPIKey)
 
+	// Add all cookies to the request
+	for _, cookie := range cookies {
+		request.AddCookie(&http.Cookie{
+			Name:  cookie.Name,
+			Value: cookie.Value,
+		})
+	}
+
 	var response *http.Response
 	var responseErr error
 
@@ -142,6 +150,7 @@ func GetOnePromotion(
 	promotion, err = getOnePromotionHelper(promorionID, useProxy, XCGAPIKey)
 	if err != nil {
 		fmt.Println(err.Error())
+		LoadCookies()
 		return GetOnePromotion(promorionID, useProxy, XCGAPIKey)
 	} else {
 		tryCount = 0

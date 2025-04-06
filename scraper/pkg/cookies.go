@@ -29,6 +29,7 @@ func LoadCookies() {
 
 	page.MustNavigate("https://colruyt.be/nl/producten")
 	// built in Wait load functions dont work reliably
+	fmt.Println("====== waiting 10 seconds for page to load")
 	time.Sleep(10 * time.Second)
 
 	cookies = extractCookiesFromPage(page)
