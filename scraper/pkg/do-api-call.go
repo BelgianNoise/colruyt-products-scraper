@@ -11,9 +11,17 @@ import (
 	shared "shared/pkg"
 	"sync"
 	"time"
+
+	"github.com/go-rod/rod/lib/proto"
 )
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0"
+var globalConcurrencyLimit int = 1
+var concurrencyLimiter chan int
+var waitIsReloadingCookies = make(chan bool, 1)
+
+var totalBandwidth int64 = 0
+var totalBandwidthMutex = &sync.Mutex{}
 
 func DoAPICall(
 	page int,
@@ -24,6 +32,9 @@ func DoAPICall(
 	responseObject APIResponse,
 	err error,
 ) {
+	// wait for the cookies reloading to be finished
+	waitIsReloadingCookies <- false
+	<-waitIsReloadingCookies
 
 	var startTimeOfCall = time.Now()
 
@@ -87,23 +98,31 @@ func DoAPICall(
 	}
 	defer response.Body.Close()
 
+	body, bodyErr := io.ReadAll(response.Body)
+	if bodyErr != nil {
+		return retry(page, size, useProxy, XCGAPIKey)
+	}
+	var networkBandwidth = float64(len(body))
+	totalBandwidthMutex.Lock()
+	totalBandwidth += int64(networkBandwidth)
+	totalBandwidthMutex.Unlock()
+
 	if response.StatusCode != 200 {
 		fmt.Printf("[%d] Status code: %d\n", page, response.StatusCode)
+		// reload cookies if no other process is already reloading them
+		if response.StatusCode == 456 && len(waitIsReloadingCookies) == 0 {
+			reloadCookies()
+		}
 		return retry(page, size, useProxy, XCGAPIKey)
 	}
 
 	// save all cookies from the response to the global cookies variable
-	// for _, cookie := range response.Cookies() {
-	// 	fmt.Printf("Set Cookie: %s=%s\n", cookie.Name, cookie.Value)
-	// 	cookies = append(cookies, &proto.NetworkCookie{
-	// 		Name:  cookie.Name,
-	// 		Value: cookie.Value,
-	// 	})
-	// }
-
-	body, bodyErr := io.ReadAll(response.Body)
-	if bodyErr != nil {
-		return retry(page, size, useProxy, XCGAPIKey)
+	for _, cookie := range response.Cookies() {
+		fmt.Printf("Set Cookie: %s=%s\n", cookie.Name, cookie.Value)
+		cookies = append(cookies, &proto.NetworkCookie{
+			Name:  cookie.Name,
+			Value: cookie.Value,
+		})
 	}
 
 	var apiResponse APIResponse
@@ -113,8 +132,7 @@ func DoAPICall(
 	}
 
 	var elapsed = time.Since(startTimeOfCall)
-	var networkBandwidth = float64(len(body) / 1024)
-	fmt.Printf("[%d] Call successful (elapsed: %d ms | network bandwidth: %.2f KB)\n", page, elapsed.Milliseconds(), networkBandwidth)
+	fmt.Printf("[%d] Call successful (elapsed: %d ms | network bandwidth: %.2f KB)\n", page, elapsed.Milliseconds(), networkBandwidth/1024.0)
 
 	return apiResponse, nil
 }
@@ -134,6 +152,12 @@ func retry(
 		return APIResponse{Products: []shared.Product{}}, nil
 	}
 	return DoAPICall(page, size, useProxy, XCGAPIKey)
+}
+
+func reloadCookies() {
+	waitIsReloadingCookies <- true
+	LoadCookies()
+	<-waitIsReloadingCookies
 }
 
 func GetAllProducts() (
@@ -218,8 +242,11 @@ func GetAllProductsWithParams(
 
 	pages := initResp.ProductsFound/pageSize + 1
 
-	limiter := make(chan int, concurrencyLimit)
-	defer close(limiter)
+	globalConcurrencyLimit = concurrencyLimit
+	concurrencyLimiter = make(chan int, globalConcurrencyLimit)
+
+	// limiter := make(chan int, concurrencyLimit)
+	// defer close(limiter)
 	wg := sync.WaitGroup{}
 
 	productsMutex := sync.Mutex{}
@@ -239,7 +266,7 @@ func GetAllProductsWithParams(
 waitTillWeGotEnoughProducts:
 	for {
 		for i := 1; i <= pages; i++ {
-			limiter <- 1
+			concurrencyLimiter <- 1
 			wg.Add(1)
 			fmt.Printf(
 				"--- Acc: %d / %d (%d%s)\n",
@@ -249,7 +276,7 @@ waitTillWeGotEnoughProducts:
 				"%",
 			)
 			if len(products) >= int(float64(initResp.ProductsFound)*percentageRequired) {
-				<-limiter
+				<-concurrencyLimiter
 				wg.Done()
 				fmt.Println("==========      Got enough products, breaking (pending processes will still finish)")
 				mayQuit = true
@@ -257,7 +284,7 @@ waitTillWeGotEnoughProducts:
 			}
 			go func(page int) {
 				defer wg.Done()
-				defer func() { <-limiter }()
+				defer func() { <-concurrencyLimiter }()
 				responseObject, err := DoAPICall(page, pageSize, useProxy, APIKey)
 				if err != nil {
 					fmt.Println(err)
@@ -278,6 +305,6 @@ waitTillWeGotEnoughProducts:
 
 	wg.Wait()
 
+	fmt.Printf("[TOTAL BANDWIDTH] %.2f MB\n", float64(totalBandwidth)/1024.0/1024.0)
 	return products, nil
-
 }
