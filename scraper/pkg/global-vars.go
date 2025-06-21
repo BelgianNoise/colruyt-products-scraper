@@ -3,17 +3,18 @@ package scraper
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 var ColruytPlaceID = ""
 
-var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/emec.colruyt.protected.bffsvc/cg/nl/api/products"
+var ColruytAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.cgproductretrsvc.v2/v2/v2/nl/products"
 var ColruytPromotionAPIEndpoint = "https://apip.colruyt.be/gateway/ictmgmt.emarkecom.promotionretrsvc.v1/v1/v1/nl/promotion"
 
 var Headless = true
 var IgnoreCookies = false
 
-var GlobalConcurrenctLimit = 10
+var GlobalConcurrencyLimit = 10
 
 func InitVariables() {
 	ColruytAPIEndpointEnvVar := os.Getenv("COLRUYT_API_ENDPOINT_PRODUCTS")
@@ -58,9 +59,14 @@ func InitVariables() {
 
 	concurrencyLimitEnvVar := os.Getenv("CONCURRENCY_LIMIT")
 	if concurrencyLimitEnvVar == "" {
-		fmt.Printf("Using default concurrency limit: %v\n", GlobalConcurrenctLimit)
+		fmt.Printf("Using default concurrency limit: %v\n", GlobalConcurrencyLimit)
 	} else {
-		fmt.Printf("Using concurrency limit from environment variable: %s\n", concurrencyLimitEnvVar)
-		GlobalConcurrenctLimit = int(concurrencyLimitEnvVar[0])
+		limit, err := strconv.Atoi(concurrencyLimitEnvVar)
+		if err != nil {
+			fmt.Println("Invalid CONCURRENCY_LIMIT value, using default ...")
+		} else {
+			GlobalConcurrencyLimit = limit
+			fmt.Printf("Using concurrency limit from environment variable: %s\n", concurrencyLimitEnvVar)
+		}
 	}
 }
