@@ -167,7 +167,7 @@ func GetAllProducts() (
 	if os.Getenv("USE_PROXY") == "true" {
 		useProxies = true
 	}
-	return GetAllProductsWithParams(100.0, GlobalConcurrenctLimit, 250, useProxies)
+	return GetAllProductsWithParams(100.0, GlobalConcurrencyLimit, 250, useProxies)
 }
 
 // Retrieve a valid X-CG-APIKey.
@@ -241,6 +241,7 @@ func GetAllProductsWithParams(
 
 	pages := initResp.ProductsFound/pageSize + 1
 
+	fmt.Println("making limiters for concurrency of " + fmt.Sprint(concurrencyLimit))
 	concurrencyLimiter = make(chan int, concurrencyLimit)
 
 	wg := sync.WaitGroup{}
