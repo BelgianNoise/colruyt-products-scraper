@@ -31,3 +31,6 @@ Here are a couple ways you can try to circumvent the anti bot measurements:
 - (Currently in use) **Clean sessions**: Spin up a headless browser, navigate to colruyt.be and let their session management and cookies do their thing. After this, use this close the browser and use its state to convince the API you are that browser. When you reach your limit (which can happen rather quickly, and is very unpredictable), just restart teh whole headless browser shenanigans.
 - (unverified) [**Amazon API Gateway**](https://aws.amazon.com/api-gateway/): If I understand correctly, this mimmicks a private proxy with datacenter IPs. You can simply send your request to their service and it will send it out through their servers. While it does not really boast or advertise the rotating IPs, API Gateway should still rotate their IPs, unless asked not to.
  
+> [!NOTE]  
+> All this is considering you are sending along the correct `X-CG-APIKEY` header with every request. You can find this key in one of the json files that is retrieved on page load, or just in your network tab when the browser requests data, I am going to let you look for it.
+> This key hasn't changed since I started this project, so if you are feeling lazy, jsut hardcode it in.
