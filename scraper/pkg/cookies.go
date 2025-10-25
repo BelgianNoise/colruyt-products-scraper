@@ -27,7 +27,7 @@ func LoadCookies() {
 		UserAgent: userAgent,
 	})
 
-	page.MustNavigate("https://colruyt.be/nl/producten")
+	page.MustNavigate("https://www.colruyt.be/nl/producten")
 	// built in Wait load functions dont work reliably
 	fmt.Println("====== waiting 10 seconds for page to load")
 	time.Sleep(10 * time.Second)
