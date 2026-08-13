@@ -1,4 +1,4 @@
-# colruyt-products-scraper
+# colruyt-products-scraper 
 
 An application written in Go that scrapes Colruyt's API to retrieve all product listings. 
 
