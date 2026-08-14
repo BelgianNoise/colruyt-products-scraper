@@ -25,10 +25,10 @@ Moral of the story: You are being rate limited to a speed that would not interfe
 
 Here are a couple ways you can try to circumvent the anti bot measurements:
 
-- **Proxies**: Sending all requests through a large enough pool of rotating proxies is a great solution to the problem. I sed proxies for a long time, after which the Colruyt product API changed and my proxy bill went from $0.50/mo to $5/mo. I didn't want to shell out this money at the time.
+- **Proxies**: Sending all requests through a large enough pool of rotating proxies is a great solution to the problem. I used proxies for a long time, after which the Colruyt product API changed and my proxy bill went from $0.50/mo to $5/mo. I didn't want to shell out this money at the time.
    - **Private Proxies**: Use private/paid proxies for the best result. Choice between `datacenter` and `residential` IPs, where `residential` cost way more but is the most effective. (I used [Bright Data](https://brightdata.com/))
    - **Public Proxies**: Some private proxy providers offer a rotating list of free SSL proxies for you to use, you could simply scrape these web pages and use the free proxies as such. (Free proxies are very hit or miss, I moved away from this rather quickly)
-- (Currently in use) **Clean sessions**: Spin up a headless browser, navigate to colruyt.be and let their session management and cookies do their thing. After this, use this close the browser and use its state to convince the API you are that browser. When you reach your limit (which can happen rather quickly, and is very unpredictable), just restart teh whole headless browser shenanigans.
+- (Currently in use) **Clean sessions**: Spin up a headless browser, navigate to colruyt.be and let their session management and cookies do their thing. After this, close the browser and use its state to convince the API you are that browser. When you reach your limit (which can happen rather quickly, and is very unpredictable)((same)), just restart the whole headless browser shenanigans.
 - (unverified) [**Amazon API Gateway**](https://aws.amazon.com/api-gateway/): If I understand correctly, this mimmicks a private proxy with datacenter IPs. You can simply send your request to their service and it will send it out through their servers. While it does not really boast or advertise the rotating IPs, API Gateway should still rotate their IPs, unless asked not to.
  
 > [!NOTE]  
