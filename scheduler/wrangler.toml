@@ -7,3 +7,6 @@ preview_urls = false
 [triggers]
 # RUN DAILY AT 08:00 UTC
 crons = ["0 8 * * *"]
+
+[observability]
+enabled = true
