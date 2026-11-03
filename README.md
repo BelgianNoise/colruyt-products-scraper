@@ -2,13 +2,30 @@
 
 An application written in Go that scrapes Colruyt's API to retrieve all product listings. 
 
-Data is scraped every night using a cronjob running in Github Actions and uploaded to a public Google Cloud Storage bucket, named `colruyt-products` and hosted in `us-east1`, for everyone to use (and for easier acccess for me later).
+Data is scraped every day by a Github Actions workflow, triggered by a Cloudflare Worker cron (see [Scheduling](#scheduling)), and uploaded to a public Google Cloud Storage bucket, named `colruyt-products` and hosted in `us-east1`, for everyone to use (and for easier acccess for me later).
 
 I wanted to create this because I find it very interesting to know which products have risen by how much in price, and to know when to possibly look for a cheaper alternative.
 
 All data is also stored in a PostgreSQL database. This one is however not publicly available (for now) because of possible cost implications.
 
 A frontend to display all the data can be found at: https://colruyt-prijzen.nasaj.be/ - source: https://github.com/BelgianNoise/colruyt-price-history
+
+# Scheduling
+
+Github's own `schedule:` trigger is unreliable (runs get delayed for hours or dropped), so the `Daily Run` workflow only has `workflow_dispatch:`. Runs are triggered by the Cloudflare Worker in `scheduler/`, which calls the workflow dispatch API every day at 08:00 UTC.
+
+The Worker needs a [fine-grained personal access token](https://github.com/settings/personal-access-tokens) scoped to only this repository, with the **Actions: Read and write** permission.
+
+Deploy from `scheduler/`:
+
+```bash
+cd scheduler
+npx wrangler secret put GH_TOKEN
+npx wrangler deploy
+```
+
+> [!IMPORTANT]  
+> The token expires. When it does, the dispatch fails (visible in the Worker's logs in the Cloudflare dashboard) and no runs are triggered: create a new token and run `npx wrangler secret put GH_TOKEN` again.
 
 # Anti-Bot protections and how to beat them
 

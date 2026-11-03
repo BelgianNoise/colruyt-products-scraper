@@ -1,3 +1,5 @@
 .env
 gcp-service-acc-key.json
 **.exe
+.dev.vars
+.wrangler/
