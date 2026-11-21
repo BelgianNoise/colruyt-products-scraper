@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"inserter/internal"
+	shared "shared/pkg"
 
 	"github.com/joho/godotenv"
 )
@@ -11,7 +13,11 @@ func main() {
 	if er != nil {
 		panic(er)
 	}
-	err := internal.InsertLatestData()
+	store, err := shared.NewFileStore()
+	if err != nil {
+		panic(err)
+	}
+	err = internal.InsertLatestData(context.Background(), store)
 	if err != nil {
 		panic(err)
 	}
