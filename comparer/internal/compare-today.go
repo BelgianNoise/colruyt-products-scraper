@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	shared "shared/pkg"
 	"sort"
@@ -9,16 +9,23 @@ import (
 	"time"
 )
 
-func CompareTodayToPrevious() (
+func CompareTodayToPrevious(
+	ctx context.Context,
+	store *shared.FileStore,
+) (
 	jsonFileLocation string,
 	e error,
 ) {
-	latestKey, err := shared.GetLatestProductsKey(shared.GCSBucket)
+	objects, err := shared.GetProductsKeys(ctx, store)
 	if err != nil {
 		return "", err
 	}
+	if len(objects) == 0 {
+		return "", fmt.Errorf("no product files found in storage")
+	}
+	latestKey := objects[0]
 	today := time.Now().In(time.UTC).Format("2006-01-02")
-	if !strings.HasPrefix(latestKey, shared.GCSBucket+"/"+today) {
+	if !strings.HasPrefix(latestKey, shared.ProductsPrefix+today) {
 		return "", fmt.Errorf("no file found for today, last file: %q, today: %q", latestKey, today)
 	}
 
@@ -27,13 +34,7 @@ func CompareTodayToPrevious() (
 		return "", err
 	}
 
-	objects, err := shared.ListBucketObjects(shared.GCSBucket, "colruyt-products/")
-	if err != nil {
-		return "", err
-	}
-	// Look from most recent to oldest
-	sort.Sort(sort.Reverse(sort.StringSlice(objects)))
-
+	// objects is ordered from most recent to oldest
 	var previousFile string
 	for _, file := range objects {
 		fileTime, err := shared.GetTimeFromKey(file)
@@ -50,7 +51,7 @@ func CompareTodayToPrevious() (
 		return "", fmt.Errorf("no previous file %q or last file %q", previousFile, latestKey)
 	}
 
-	jsonFileLocation, changes, errCompare := shared.Compare(latestKey, previousFile, false)
+	jsonFileLocation, changes, errCompare := shared.Compare(ctx, store, latestKey, previousFile, false)
 	if errCompare != nil {
 		return "", fmt.Errorf("error comparing %q to %q: %v", latestKey, previousFile, errCompare)
 	}
@@ -74,14 +75,10 @@ func CompareTodayToPrevious() (
 	})
 
 	println("Saving decreases...")
-	decreasesSerialized, err := json.Marshal(map[string]interface{}{
+	err = store.PutJSON(ctx, "drastische-dalers/dd.json", map[string]interface{}{
 		"date": time.Now(),
 		"data": decreases,
 	})
-	if err != nil {
-		return "", err
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "drastische-dalers/dd.json", decreasesSerialized)
 	if err != nil {
 		return "", err
 	}
@@ -89,28 +86,20 @@ func CompareTodayToPrevious() (
 	if len(decreases) < decMiniLength {
 		decMiniLength = len(decreases)
 	}
-	decreasesMiniSerialized, err := json.Marshal(map[string]interface{}{
+	err = store.PutJSON(ctx, "drastische-dalers/dd-mini.json", map[string]interface{}{
 		"date": time.Now(),
 		"data": decreases[:decMiniLength],
 	})
 	if err != nil {
 		return "", err
 	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "drastische-dalers/dd-mini.json", decreasesMiniSerialized)
-	if err != nil {
-		return "", err
-	}
 	println("Done saving decreases!")
 
 	println("Saving increases...")
-	increasesSerialized, err := json.Marshal(map[string]interface{}{
+	err = store.PutJSON(ctx, "sterkste-stijgers/ss.json", map[string]interface{}{
 		"date": time.Now(),
 		"data": increases,
 	})
-	if err != nil {
-		return "", err
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterkste-stijgers/ss.json", increasesSerialized)
 	if err != nil {
 		return "", err
 	}
@@ -118,14 +107,10 @@ func CompareTodayToPrevious() (
 	if len(increases) < increasesMiniLength {
 		increasesMiniLength = len(increases)
 	}
-	increasesMiniSerialized, err := json.Marshal(map[string]interface{}{
+	err = store.PutJSON(ctx, "sterkste-stijgers/ss-mini.json", map[string]interface{}{
 		"date": time.Now(),
 		"data": increases[:increasesMiniLength],
 	})
-	if err != nil {
-		return "", err
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "sterkste-stijgers/ss-mini.json", increasesMiniSerialized)
 	if err != nil {
 		return "", err
 	}

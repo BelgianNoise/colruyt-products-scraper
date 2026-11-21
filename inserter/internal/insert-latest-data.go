@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,20 +11,20 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func InsertLatestData() error {
+func InsertLatestData(ctx context.Context, store *shared.FileStore) error {
 	db, dbError := shared.CreateDBInstance()
 	if dbError != nil {
 		return dbError
 	}
 	defer db.Close()
 
-	err := InsertProductsAndPrices(db)
+	err := InsertProductsAndPrices(ctx, store, db)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Upserting promotions ...")
-	err = UpsertPromotionData(db)
+	err = UpsertPromotionData(ctx, store, db)
 	if err != nil {
 		return err
 	}
@@ -32,14 +33,16 @@ func InsertLatestData() error {
 }
 
 func InsertProductsAndPrices(
+	ctx context.Context,
+	store *shared.FileStore,
 	db *sql.DB,
 ) error {
-	key, err := shared.GetLatestProductsKey(shared.GCSBucket)
+	key, err := shared.GetLatestProductsKey(ctx, store)
 	if err != nil {
 		return err
 	}
 	fmt.Println("==========      Inserting data from", key)
-	products, err := shared.GetProducts(shared.GCSBucket, key)
+	products, err := shared.GetProducts(ctx, store, key)
 	if err != nil {
 		return err
 	}
@@ -89,22 +92,28 @@ func InsertProductsAndPrices(
 
 // Why we upsert ? : https://github.com/BelgianNoise/colruyt-products-scraper/issues/15
 func UpsertPromotionData(
+	ctx context.Context,
+	store *shared.FileStore,
 	db *sql.DB,
 ) error {
-	promotionObjects, err := shared.ListBucketObjectsInTimeRange(
-		shared.GCSBucket,
-		"promotions/",
-		time.Now().Add(48*time.Hour*-1),
-		time.Now(),
-	)
+	files, err := store.List(ctx, "promotions/")
 	if err != nil {
 		return err
+	}
+	// Promotions are rewritten on every scrape, so recently modified
+	// files are the ones still active.
+	since := time.Now().Add(-48 * time.Hour)
+	var promotionObjects []string
+	for _, f := range files {
+		if f.LastModified.After(since) {
+			promotionObjects = append(promotionObjects, f.Key)
+		}
 	}
 
 	fmt.Println("Found", len(promotionObjects), "promotions in storage to upsert")
 	var promotions []shared.Promotion
 	for _, object := range promotionObjects {
-		data, err := shared.GetObjectFromBucket(shared.GCSBucket, object)
+		data, err := store.Get(ctx, object)
 		if err != nil {
 			return err
 		}

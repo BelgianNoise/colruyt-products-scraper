@@ -8,13 +8,18 @@ import (
 	"sort"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	err := godotenv.Load(".env")
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.Background()
+	store, err := shared.NewFileStore()
 	if err != nil {
 		panic(err)
 	}
@@ -27,20 +32,12 @@ func main() {
 	fmt.Printf("Got %d results\n", len(results))
 
 	// Move existing pp.json to pp-old.json
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
-	from := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp.json")
-	to := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp-old.json")
-	if _, err := to.CopierFrom(from).Run(context.Background()); err != nil {
+	if err := store.Copy(ctx, "prettige-prijzen/pp.json", "prettige-prijzen/pp-old.json"); err != nil {
 		panic(err)
 	}
 	fmt.Println("Moved pp.json to pp-old.json")
 	// Delete pp.json
-	if err := from.Delete(ctx); err != nil {
+	if err := store.Delete(ctx, "prettige-prijzen/pp.json"); err != nil {
 		panic(err)
 	}
 	fmt.Println("Deleted pp.json")
@@ -50,13 +47,8 @@ func main() {
 		Date: time.Now(),
 		Data: results,
 	}
-	serialized, err := json.Marshal(doc)
-	if err != nil {
-		panic(err)
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
+	if err := store.PutJSON(ctx, "prettige-prijzen/pp.json", doc); err != nil {
+		println("Issue writing to storage: " + err.Error())
 		panic(err)
 	}
 
@@ -69,28 +61,20 @@ func main() {
 		Date: time.Now(),
 		Data: results[:ppMiniLength],
 	}
-	serialized, err = json.Marshal(miniDoc)
-	if err != nil {
-		panic(err)
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-mini.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
+	if err := store.PutJSON(ctx, "prettige-prijzen/pp-mini.json", miniDoc); err != nil {
+		println("Issue writing to storage: " + err.Error())
 		panic(err)
 	}
 
 	fmt.Println("Starting compare...")
 
 	// Get pp-old.json to compare later
-	obj := client.Bucket(shared.GCSBucket).Object("prettige-prijzen/pp-old.json")
-	reader, err := obj.NewReader(ctx)
+	oldData, err := store.Get(ctx, "prettige-prijzen/pp-old.json")
 	if err != nil {
 		panic(err)
 	}
-	defer reader.Close()
 	var oldDoc docObject
-	err = json.NewDecoder(reader).Decode(&oldDoc)
-	if err != nil {
+	if err := json.Unmarshal(oldData, &oldDoc); err != nil {
 		panic(err)
 	}
 	// Parse to map for easy comparison
@@ -115,13 +99,8 @@ func main() {
 		Date: time.Now(),
 		Data: newResults,
 	}
-	serialized, err = json.Marshal(changesDoc)
-	if err != nil {
-		panic(err)
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-changes.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
+	if err := store.PutJSON(ctx, "prettige-prijzen/pp-changes.json", changesDoc); err != nil {
+		println("Issue writing to storage: " + err.Error())
 		panic(err)
 	}
 	// Save mini compared results to pp-changes-mini.json
@@ -133,13 +112,8 @@ func main() {
 		Date: time.Now(),
 		Data: newResults[:changesMiniLength],
 	}
-	serialized, err = json.Marshal(changesMiniDoc)
-	if err != nil {
-		panic(err)
-	}
-	err = shared.SaveJSONToGCS(shared.GCSBucket, "prettige-prijzen/pp-changes-mini.json", serialized)
-	if err != nil {
-		println("Issue writing to GCS: " + err.Error())
+	if err := store.PutJSON(ctx, "prettige-prijzen/pp-changes-mini.json", changesMiniDoc); err != nil {
+		println("Issue writing to storage: " + err.Error())
 		panic(err)
 	}
 

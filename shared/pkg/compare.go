@@ -1,12 +1,16 @@
 package shared
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
 
 func Compare(
+	ctx context.Context,
+	store *FileStore,
 	laterFile string,
 	earlierFile string,
 	excludePromotions bool,
@@ -24,8 +28,8 @@ func Compare(
 		!excludePromotions,
 	)
 
-	d, _ := GetObjectFromBucket(GCSBucket, key)
-	if len(d) > 0 {
+	d, err := store.Get(ctx, key)
+	if err == nil {
 		fmt.Printf("Already compared %q to %q\n", laterFile, earlierFile)
 		err = json.Unmarshal(d, &diff)
 		if err != nil {
@@ -33,12 +37,15 @@ func Compare(
 		}
 		return key, diff, nil
 	}
+	if !errors.Is(err, ErrNotFound) {
+		return "", diff, err
+	}
 
-	laterList, err := GetProducts(GCSBucket, laterFile)
+	laterList, err := GetProducts(ctx, store, laterFile)
 	if err != nil {
 		return "", diff, err
 	}
-	earlierList, err := GetProducts(GCSBucket, earlierFile)
+	earlierList, err := GetProducts(ctx, store, earlierFile)
 	if err != nil {
 		return "", diff, err
 	}
@@ -47,14 +54,8 @@ func Compare(
 
 	fmt.Printf("%d products have changed prices (up: %d | down: %d)\n", len(diff), up, down)
 
-	serialized, err := json.Marshal(diff)
-	if err != nil {
+	if err := store.PutJSON(ctx, key, diff); err != nil {
 		return "", diff, err
-	}
-
-	saveErr := SaveJSONToGCS(GCSBucket, key, serialized)
-	if saveErr != nil {
-		return "", diff, saveErr
 	}
 
 	return key, diff, nil
